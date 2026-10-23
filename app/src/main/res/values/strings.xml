@@ -7,4 +7,5 @@
     <string name="done">Done</string>
     <string name="editor_hint">Drag to move · pinch to resize</string>
     <string name="editor_hint_edges">Pinch to change thickness</string>
+    <string name="accessibility_description">Draws the notification light over the always-on display.</string>
 </resources>
