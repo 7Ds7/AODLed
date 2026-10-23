@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ring around a dark "camera hole", centred in the adaptive-icon safe zone -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF34C759"
+        android:fillType="evenOdd"
+        android:pathData="M54,32a22,22 0,1 0,0.001 0zM54,38a16,16 0,1 1,-0.001 0z" />
+    <path
+        android:fillColor="#FF2A2A2A"
+        android:pathData="M54,45a9,9 0,1 0,0.001 0z" />
+</vector>

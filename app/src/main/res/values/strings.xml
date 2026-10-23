@@ -9,4 +9,40 @@
     <string name="editor_hint">Drag to move · pinch to resize</string>
     <string name="editor_hint_edges">Pinch to change thickness</string>
     <string name="accessibility_description">Draws the notification light over the always-on display.</string>
+    <string name="section_status">Status</string>
+    <string name="section_light">Light</string>
+    <string name="setting_style">Style</string>
+    <string name="setting_animation">Animation</string>
+    <string name="anim_off">Off</string>
+    <string name="anim_pulse">Pulse</string>
+    <string name="anim_rotate">Rotate</string>
+    <string name="setting_colour">Colour</string>
+    <string name="colour_app">App colours</string>
+    <string name="colour_fixed">Fixed colour</string>
+    <string name="setting_light_off">Light off</string>
+    <string name="off_dismiss">When dismissed</string>
+    <string name="off_unlock">On unlock</string>
+    <string name="adjust">Adjust position &amp; size</string>
+    <string name="test_notification">Send test notification</string>
+    <string name="status_listener">Notification access</string>
+    <string name="status_accessibility">Accessibility service</string>
+    <string name="status_battery">Battery unrestricted</string>
+    <string name="status_aod">Always-on display</string>
+    <string name="status_ok">On</string>
+    <string name="status_missing">Off · tap to fix</string>
+    <string name="status_unknown">Unknown · check Settings → Display → Lock screen</string>
+    <string name="test_channel">Test</string>
+    <string name="test_title">AODLed test</string>
+    <string name="test_text">Lock the phone to see the light. Dismiss this to turn it off.</string>
+    <string-array name="palette_names">
+        <item>White</item>
+        <item>Red</item>
+        <item>Orange</item>
+        <item>Yellow</item>
+        <item>Green</item>
+        <item>Cyan</item>
+        <item>Blue</item>
+        <item>Purple</item>
+        <item>Pink</item>
+    </string-array>
 </resources>
