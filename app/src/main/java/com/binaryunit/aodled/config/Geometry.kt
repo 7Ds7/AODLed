@@ -6,11 +6,11 @@ const val RING_MAX_RADIUS = 300f
 const val RING_THICKNESS_RATIO = 0.08f
 const val DOT_MIN = 1f
 const val DOT_MAX = 24f
-const val DOT_DEFAULT = 2f
+const val DOT_DEFAULT = 4f
 const val DOT_GAP = 24f
 const val EDGE_MIN = 1f
 const val EDGE_MAX = 24f
-const val EDGE_DEFAULT = 3f
+const val EDGE_DEFAULT = 2f
 
 /** Plain rectangle so geometry stays testable on the JVM (android.graphics.RectF is stubbed there). */
 data class Box(val left: Float, val top: Float, val right: Float, val bottom: Float) {

@@ -5,12 +5,13 @@ import com.binaryunit.aodled.config.Style
 import kotlin.math.PI
 import kotlin.math.cos
 
-const val ANIM_FPS = 15
+const val ANIM_FPS = 30
 const val PULSE_PERIOD_MS = 4000L
 const val PULSE_MIN_ALPHA = 0.3f
-const val ROTATE_PERIOD_MS = 6000L
-const val ROTATE_BASE_ALPHA = 0.35f
-const val ROTATE_ARC_DEG = 90f
+const val ROTATE_PERIOD_MS = 2000L
+const val GLOW_FACTOR = 3f
+const val GLOW_MIN = 4f
+const val GLOW_MAX = 24f
 
 /** A dot can't rotate, so rotation falls back to pulse. */
 fun effectiveAnimation(style: Style, anim: Animation): Animation =
@@ -23,3 +24,6 @@ fun pulseAlpha(tMs: Long): Float {
 }
 
 fun rotationAngle(tMs: Long): Float = (tMs % ROTATE_PERIOD_MS) * 360f / ROTATE_PERIOD_MS
+
+/** Blur radius of the soft halo drawn around a line or dot of the given thickness. */
+fun glowRadius(thickness: Float): Float = (thickness * GLOW_FACTOR).coerceIn(GLOW_MIN, GLOW_MAX)

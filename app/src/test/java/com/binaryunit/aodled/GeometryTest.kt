@@ -28,11 +28,13 @@ class GeometryTest {
     @Test fun `default ring without cutout is top centre`() =
         assertEquals(540f, defaultRing(null, 1080).cx)
 
-    @Test fun `default dot sits below cutout at 2px`() =
-        assertEquals(DotPlacement(540f, 124f, 2f), defaultDot(cutout, 1080))
+    @Test fun `default dot sits below cutout at 4px`() =
+        assertEquals(DotPlacement(540f, 124f, 4f), defaultDot(cutout, 1080))
+
+    @Test fun `default edges are thin`() = assertEquals(2f, com.binaryunit.aodled.config.LightConfig().edgeThickness)
 
     @Test fun `default dot can still pinch down to 1px`() =
-        assertEquals(DOT_MIN, defaultDot(cutout, 1080).pinched(0.5f).size)
+        assertEquals(DOT_MIN, defaultDot(cutout, 1080).pinched(0.1f).size)
 
     @Test fun `ring pinch clamps`() {
         assertEquals(RING_MAX_RADIUS, RingPlacement(0f, 0f, 200f).pinched(10f).radius)
