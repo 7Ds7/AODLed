@@ -3,7 +3,7 @@ package com.binaryunit.aodled.config
 const val RING_GAP = 8f
 const val RING_MIN_RADIUS = 10f
 const val RING_MAX_RADIUS = 300f
-const val RING_THICKNESS_RATIO = 0.08f
+const val RING_THICKNESS_RATIO = 0.12f
 const val DOT_MIN = 1f
 const val DOT_MAX = 24f
 const val DOT_DEFAULT = 4f

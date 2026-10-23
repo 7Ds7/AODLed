@@ -34,4 +34,9 @@ class SwirlTest {
         assertEquals(SWIRL_BAND_END, swirlBandOffset(SWIRL_PERIOD_MS - 1), 0.05f)
         assertTrue(swirlBandOffset(300) < swirlBandOffset(600))
     }
+
+    @Test fun `swirl pauses dark for at least half a second`() {
+        assertTrue(SWIRL_PERIOD_MS - 883 >= 500)
+        for (t in 883L until SWIRL_PERIOD_MS step 10) assertEquals(0f, swirlWidth(t), 0.001f)
+    }
 }

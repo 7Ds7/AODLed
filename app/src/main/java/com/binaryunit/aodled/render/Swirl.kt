@@ -5,7 +5,7 @@ import kotlin.math.abs
 // Ring "swirl", modelled on the Samsung punch-hole animation HoleyLight used: a 1 s cycle in which a faint ring
 // swells and thins while a bright 45° band sweeps across it. Distances are in units of the ring radius.
 
-const val SWIRL_PERIOD_MS = 1017L // 61 frames at 60 fps
+const val SWIRL_PERIOD_MS = 1500L // Samsung loop is 1017 ms; owner wanted a longer dark pause
 private const val SWELL_END_MS = 150L
 private const val THIN_END_MS = 883L
 private const val SWEEP_END_MS = 1000L

@@ -42,7 +42,7 @@ class GeometryTest {
     }
 
     @Test fun `ring thickness grows with radius, min 1px`() {
-        assertEquals(4f, ringThickness(50f), 0.001f)
+        assertEquals(6f, ringThickness(50f), 0.001f)
         assertEquals(1f, ringThickness(5f), 0.001f)
     }
 
