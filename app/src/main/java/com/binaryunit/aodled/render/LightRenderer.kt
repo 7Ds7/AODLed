@@ -71,12 +71,13 @@ class LightRenderer {
     private fun drawDot(canvas: Canvas, s: LightState, base: Int) {
         val x = s.dot.x + s.offset.dx
         val y = s.dot.y + s.offset.dy
-        if (s.dot.size < 2f) {
-            // Exactly one physical pixel: no anti-aliasing, snapped to the pixel grid
+        if (s.dot.size < 2.5f) {
+            // 1x1 or 2x2 physical pixels: no anti-aliasing, snapped to the pixel grid
             pixel.color = base
+            val n = s.dot.size.roundToInt()
             val px = x.roundToInt().toFloat()
             val py = y.roundToInt().toFloat()
-            canvas.drawRect(px, py, px + 1, py + 1, pixel)
+            canvas.drawRect(px, py, px + n, py + n, pixel)
         } else {
             fill.color = base
             canvas.drawCircle(x, y, s.dot.size / 2, fill)

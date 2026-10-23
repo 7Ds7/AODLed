@@ -20,7 +20,7 @@ class Prefs(context: Context) {
                 prefs.getFloat(KEY_RING_CX, 0f), prefs.getFloat(KEY_RING_CY, 0f), prefs.getFloat(KEY_RING_R, 0f)
             ) else null,
             dot = if (prefs.contains(KEY_DOT_X)) DotPlacement(
-                prefs.getFloat(KEY_DOT_X, 0f), prefs.getFloat(KEY_DOT_Y, 0f), prefs.getFloat(KEY_DOT_SIZE, DOT_MIN)
+                prefs.getFloat(KEY_DOT_X, 0f), prefs.getFloat(KEY_DOT_Y, 0f), prefs.getFloat(KEY_DOT_SIZE, DOT_DEFAULT)
             ) else null,
             edgeThickness = prefs.getFloat(KEY_EDGE, d.edgeThickness),
         )

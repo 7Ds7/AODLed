@@ -6,6 +6,7 @@ const val RING_MAX_RADIUS = 300f
 const val RING_THICKNESS_RATIO = 0.08f
 const val DOT_MIN = 1f
 const val DOT_MAX = 24f
+const val DOT_DEFAULT = 2f
 const val DOT_GAP = 24f
 const val EDGE_MIN = 1f
 const val EDGE_MAX = 24f
@@ -24,8 +25,8 @@ fun defaultRing(cutout: Box?, screenWidth: Int): RingPlacement {
 }
 
 fun defaultDot(cutout: Box?, screenWidth: Int): DotPlacement {
-    if (cutout == null) return DotPlacement(screenWidth / 2f, 124f, DOT_MIN)
-    return DotPlacement(cutout.centreX, cutout.bottom + DOT_GAP, DOT_MIN)
+    if (cutout == null) return DotPlacement(screenWidth / 2f, 124f, DOT_DEFAULT)
+    return DotPlacement(cutout.centreX, cutout.bottom + DOT_GAP, DOT_DEFAULT)
 }
 
 fun ringThickness(radius: Float): Float = maxOf(1f, radius * RING_THICKNESS_RATIO)
