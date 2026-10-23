@@ -7,7 +7,7 @@ import kotlin.math.cos
 
 const val ANIM_FPS = 30
 const val PULSE_PERIOD_MS = 4000L
-const val PULSE_MIN_ALPHA = 0.3f
+const val PULSE_DARK_MS = 600L
 const val ROTATE_PERIOD_MS = 2000L
 const val GLOW_FACTOR = 3f
 const val GLOW_MIN = 4f
@@ -17,10 +17,15 @@ const val GLOW_MAX = 24f
 fun effectiveAnimation(style: Style, anim: Animation): Animation =
     if (style == Style.DOT && anim == Animation.ROTATE) Animation.PULSE else anim
 
-/** 1.0 at t=0, [PULSE_MIN_ALPHA] at half a period, cosine in between. */
+/** Fades fully out, stays black for [PULSE_DARK_MS], fades back in; 1.0 at the start of each period. */
 fun pulseAlpha(tMs: Long): Float {
-    val phase = (tMs % PULSE_PERIOD_MS).toDouble() / PULSE_PERIOD_MS
-    return PULSE_MIN_ALPHA + (1 - PULSE_MIN_ALPHA) * (0.5f + 0.5f * cos(2 * PI * phase).toFloat())
+    val fade = (PULSE_PERIOD_MS - PULSE_DARK_MS) / 2
+    val t = tMs % PULSE_PERIOD_MS
+    return when {
+        t < fade -> 0.5f + 0.5f * cos(PI * t / fade).toFloat()
+        t < fade + PULSE_DARK_MS -> 0f
+        else -> 0.5f - 0.5f * cos(PI * (t - fade - PULSE_DARK_MS) / fade).toFloat()
+    }
 }
 
 fun rotationAngle(tMs: Long): Float = (tMs % ROTATE_PERIOD_MS) * 360f / ROTATE_PERIOD_MS

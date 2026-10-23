@@ -2,7 +2,7 @@ package com.binaryunit.aodled
 
 import com.binaryunit.aodled.config.Animation
 import com.binaryunit.aodled.config.Style
-import com.binaryunit.aodled.render.PULSE_MIN_ALPHA
+import com.binaryunit.aodled.render.PULSE_DARK_MS
 import com.binaryunit.aodled.render.PULSE_PERIOD_MS
 import com.binaryunit.aodled.render.ROTATE_PERIOD_MS
 import com.binaryunit.aodled.render.effectiveAnimation
@@ -20,9 +20,12 @@ class AnimationTest {
         assertEquals(Animation.OFF, effectiveAnimation(Style.DOT, Animation.OFF))
     }
 
-    @Test fun `pulse range`() {
+    @Test fun `pulse fades fully out, holds black, fades back`() {
+        val fade = (PULSE_PERIOD_MS - PULSE_DARK_MS) / 2
         assertEquals(1f, pulseAlpha(0), 0.001f)
-        assertEquals(PULSE_MIN_ALPHA, pulseAlpha(PULSE_PERIOD_MS / 2), 0.001f)
+        assertEquals(0f, pulseAlpha(fade), 0.001f)
+        assertEquals(0f, pulseAlpha(fade + PULSE_DARK_MS / 2), 0.001f)
+        assertEquals(0f, pulseAlpha(fade + PULSE_DARK_MS - 1), 0.01f)
         assertEquals(1f, pulseAlpha(PULSE_PERIOD_MS), 0.001f)
     }
 
