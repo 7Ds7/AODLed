@@ -73,7 +73,7 @@ class LightRenderer {
 
     /** Faint ring that swells and thins, at full brightness only inside a sweeping 45° band. */
     private fun drawSwirl(canvas: Canvas, cx: Float, cy: Float, r: Float, colour: Int, tMs: Long) {
-        val w = swirlWidth(tMs) * SWIRL_MAX_WIDTH * r
+        val w = swirlStroke(r, tMs)
         if (w < 0.5f) return
         val faint = withAlpha(colour, SWIRL_FAINT_ALPHA)
         canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(faint, GLOW_ALPHA)))

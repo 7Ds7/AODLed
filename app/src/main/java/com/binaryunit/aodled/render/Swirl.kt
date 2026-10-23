@@ -1,5 +1,6 @@
 package com.binaryunit.aodled.render
 
+import com.binaryunit.aodled.config.ringThickness
 import kotlin.math.abs
 
 // Ring "swirl", modelled on the Samsung punch-hole animation HoleyLight used: a 1 s cycle in which a faint ring
@@ -9,14 +10,16 @@ const val SWIRL_PERIOD_MS = 1500L // Samsung loop is 1017 ms; owner wanted a lon
 private const val SWELL_END_MS = 150L
 private const val THIN_END_MS = 883L
 private const val SWEEP_END_MS = 1000L
-const val SWIRL_MAX_WIDTH = 14f / 52f
 const val SWIRL_FAINT_ALPHA = 0.3f
 const val SWIRL_BAND_WIDTH = 48f / 52f
 const val SWIRL_BAND_ANGLE = 45f
 const val SWIRL_BAND_START = -107.5f / 52f
 const val SWIRL_BAND_END = 108f / 52f
 
-/** Ring stroke width as a share of [SWIRL_MAX_WIDTH]: quick swell, slow thinning, then a short gap. */
+/** Stroke width in px: swells to the still ring's thickness (owner's choice, thinner than Samsung's), then thins. */
+fun swirlStroke(radius: Float, tMs: Long): Float = swirlWidth(tMs) * ringThickness(radius)
+
+/** Swell as a share of full width: quick swell, slow thinning, then a dark pause. */
 fun swirlWidth(tMs: Long): Float {
     val t = tMs % SWIRL_PERIOD_MS
     return when {

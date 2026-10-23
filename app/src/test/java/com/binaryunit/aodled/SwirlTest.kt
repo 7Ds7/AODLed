@@ -5,6 +5,8 @@ import com.binaryunit.aodled.render.SWIRL_BAND_START
 import com.binaryunit.aodled.render.SWIRL_PERIOD_MS
 import com.binaryunit.aodled.render.cubicBezier
 import com.binaryunit.aodled.render.swirlBandOffset
+import com.binaryunit.aodled.render.swirlStroke
+import com.binaryunit.aodled.config.ringThickness
 import com.binaryunit.aodled.render.swirlWidth
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -38,5 +40,10 @@ class SwirlTest {
     @Test fun `swirl pauses dark for at least half a second`() {
         assertTrue(SWIRL_PERIOD_MS - 883 >= 500)
         for (t in 883L until SWIRL_PERIOD_MS step 10) assertEquals(0f, swirlWidth(t), 0.001f)
+    }
+
+    @Test fun `swirl peaks at the still ring thickness`() {
+        assertEquals(ringThickness(50f), swirlStroke(50f, 150), 0.001f)
+        assertEquals(0f, swirlStroke(50f, 0), 0.001f)
     }
 }
