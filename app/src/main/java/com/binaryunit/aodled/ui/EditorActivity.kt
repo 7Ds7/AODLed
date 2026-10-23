@@ -22,6 +22,7 @@ import com.binaryunit.aodled.config.defaultRing
 import com.binaryunit.aodled.config.moved
 import com.binaryunit.aodled.config.pinched
 import com.binaryunit.aodled.config.pinchedEdge
+import com.binaryunit.aodled.config.resetPlacement
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
 import com.binaryunit.aodled.render.cornerRadius
@@ -38,6 +39,7 @@ class EditorActivity : AppCompatActivity() {
     private var width = 0
     private var height = 0
     private var cornerRadius = 0f
+    private var cutout: Box? = null
     private var lastX = Float.NaN
     private var lastY = Float.NaN
     private var animating = false
@@ -69,18 +71,22 @@ class EditorActivity : AppCompatActivity() {
         hint = findViewById(R.id.hint)
 
         prefs = Prefs(this)
-        val (w, h, cutout: Box?) = screenGeometry()
+        val (w, h, c) = screenGeometry()
         width = w
         height = h
+        cutout = c
         cornerRadius = cornerRadius()
-        val saved = prefs.load()
-        cfg = saved.copy(ring = saved.ring ?: defaultRing(cutout, w), dot = saved.dot ?: defaultDot(cutout, w))
+        cfg = withDefaults(prefs.load())
 
         val group = findViewById<MaterialButtonToggleGroup>(R.id.styles)
         group.check(styleButtons.getValue(cfg.style))
         group.addOnButtonCheckedListener { _, id, checked ->
             if (!checked) return@addOnButtonCheckedListener
             cfg = cfg.copy(style = styleButtons.entries.first { it.value == id }.key)
+            render()
+        }
+        findViewById<android.view.View>(R.id.reset).setOnClickListener {
+            cfg = withDefaults(cfg.resetPlacement())
             render()
         }
         findViewById<android.view.View>(R.id.done).setOnClickListener {
@@ -117,6 +123,9 @@ class EditorActivity : AppCompatActivity() {
         animating = false
         super.onPause()
     }
+
+    private fun withDefaults(c: LightConfig) =
+        c.copy(ring = c.ring ?: defaultRing(cutout, width), dot = c.dot ?: defaultDot(cutout, width))
 
     private fun drag(e: MotionEvent) {
         // Only single-finger moves drag; reset on any pointer change so a pinch never makes the light jump

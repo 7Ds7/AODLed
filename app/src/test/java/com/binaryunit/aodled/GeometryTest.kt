@@ -14,6 +14,7 @@ import com.binaryunit.aodled.config.defaultRing
 import com.binaryunit.aodled.config.moved
 import com.binaryunit.aodled.config.pinched
 import com.binaryunit.aodled.config.pinchedEdge
+import com.binaryunit.aodled.config.resetPlacement
 import com.binaryunit.aodled.config.ringThickness
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -59,4 +60,25 @@ class GeometryTest {
 
     @Test fun `dot move keeps position on screen`() =
         assertEquals(DotPlacement(0f, 2424f, 1f), DotPlacement(10f, 2400f, 1f).moved(-50f, 50f, 1080, 2424))
+}
+
+class ResetTest {
+    private val placed = com.binaryunit.aodled.config.LightConfig(
+        ring = RingPlacement(1f, 2f, 30f), dot = DotPlacement(3f, 4f, 9f), edgeThickness = 12f,
+    )
+
+    @Test fun `reset ring clears only the ring`() {
+        val r = placed.copy(style = com.binaryunit.aodled.config.Style.RING).resetPlacement()
+        assertEquals(null, r.ring); assertEquals(placed.dot, r.dot); assertEquals(12f, r.edgeThickness)
+    }
+
+    @Test fun `reset dot clears only the dot`() {
+        val r = placed.copy(style = com.binaryunit.aodled.config.Style.DOT).resetPlacement()
+        assertEquals(null, r.dot); assertEquals(placed.ring, r.ring)
+    }
+
+    @Test fun `reset edges restores default thickness`() {
+        val r = placed.copy(style = com.binaryunit.aodled.config.Style.EDGES).resetPlacement()
+        assertEquals(com.binaryunit.aodled.config.EDGE_DEFAULT, r.edgeThickness); assertEquals(placed.ring, r.ring)
+    }
 }

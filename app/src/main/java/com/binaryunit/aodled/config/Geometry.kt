@@ -42,3 +42,10 @@ fun DotPlacement.moved(dx: Float, dy: Float, w: Int, h: Int) =
 fun DotPlacement.pinched(f: Float) = copy(size = (size * f).coerceIn(DOT_MIN, DOT_MAX))
 
 fun pinchedEdge(thickness: Float, f: Float): Float = (thickness * f).coerceIn(EDGE_MIN, EDGE_MAX)
+
+/** Back to the default position/size for the current style only. */
+fun LightConfig.resetPlacement(): LightConfig = when (style) {
+    Style.RING -> copy(ring = null)
+    Style.DOT -> copy(dot = null)
+    Style.EDGES -> copy(edgeThickness = EDGE_DEFAULT)
+}
