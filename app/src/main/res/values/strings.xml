@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AODLed</string>
+    <string name="style_ring">Ring</string>
+    <string name="style_dot">Dot</string>
+    <string name="style_edges">Edges</string>
+    <string name="done">Done</string>
+    <string name="editor_hint">Drag to move · pinch to resize</string>
+    <string name="editor_hint_edges">Pinch to change thickness</string>
 </resources>
