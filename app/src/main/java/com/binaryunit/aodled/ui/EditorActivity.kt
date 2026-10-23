@@ -59,11 +59,12 @@ class EditorActivity : AppCompatActivity() {
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_editor)
+        // After setContentView: the insets controller needs the decor view to exist
         window.insetsController?.apply {
             hide(WindowInsets.Type.systemBars())
             systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
-        setContentView(R.layout.activity_editor)
         light = findViewById(R.id.light)
         hint = findViewById(R.id.hint)
 
