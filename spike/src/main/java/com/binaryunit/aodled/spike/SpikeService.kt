@@ -18,6 +18,7 @@ import android.view.Display
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 
 // Throwaway: does a once-drawn overlay survive doze on battery? Optional keep-alive redraw.
@@ -27,6 +28,7 @@ class SpikeService : AccessibilityService() {
     private lateinit var dm: DisplayManager
     private lateinit var cpuLock: PowerManager.WakeLock
     private lateinit var drawLock: PowerManager.WakeLock
+    private lateinit var pm: PowerManager
     private var view: View? = null
     private var lastState = -1
 
@@ -38,16 +40,18 @@ class SpikeService : AccessibilityService() {
             val state = dm.getDisplay(displayId)?.state ?: return
             if (state == lastState) return
             lastState = state
-            if (state == Display.STATE_ON) hideSoon() else show()
+            evaluate("display")
         }
     }
 
-    private val screenOff = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) = show()
+    // Broadcasts can arrive late in doze; never act on them blindly, re-check interactivity instead
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = evaluate(intent.action ?: "?")
     }
 
     private val hide = Runnable {
         handler.removeCallbacks(keepAlive)
+        Log.d(TAG, "hide shown=${view != null}")
         view?.let { wm.removeView(it) }
         view = null
     }
@@ -63,22 +67,32 @@ class SpikeService : AccessibilityService() {
     override fun onServiceConnected() {
         wm = getSystemService(WindowManager::class.java)
         dm = getSystemService(DisplayManager::class.java)
-        val pm = getSystemService(PowerManager::class.java)
+        pm = getSystemService(PowerManager::class.java)
         cpuLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "aodled.spike:cpu")
         drawLock = pm.newWakeLock(0x00000080 or 0x40000000, "aodled.spike:draw") // DRAW_WAKE_LOCK | UNIMPORTANT_FOR_LOGGING
         dm.registerDisplayListener(displayListener, handler)
-        registerReceiver(screenOff, IntentFilter(Intent.ACTION_SCREEN_OFF), RECEIVER_EXPORTED)
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
+        registerReceiver(screenReceiver, filter, RECEIVER_EXPORTED)
     }
 
     override fun onDestroy() {
         dm.unregisterDisplayListener(displayListener)
-        unregisterReceiver(screenOff)
+        unregisterReceiver(screenReceiver)
         hide.run()
         super.onDestroy()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
+
+    private fun evaluate(source: String) {
+        val interactive = pm.isInteractive
+        Log.d(TAG, "$source display=${dm.getDisplay(Display.DEFAULT_DISPLAY)?.state} interactive=$interactive shown=${view != null}")
+        if (interactive) hideSoon() else show()
+    }
 
     private fun show() {
         handler.removeCallbacks(hide)
@@ -142,5 +156,6 @@ class SpikeService : AccessibilityService() {
     companion object {
         const val PREFS = "spike"
         const val KEY_KEEP_ALIVE = "keepAliveMs"
+        private const val TAG = "AODLedSpike"
     }
 }
