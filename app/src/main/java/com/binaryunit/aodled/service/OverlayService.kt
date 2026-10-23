@@ -193,6 +193,7 @@ class OverlayService : AccessibilityService() {
             colour = colour,
             offset = offset,
             cornerRadius = cornerRadius(),
+            aod = true,
         )
         wake.poke()
         v.state = state

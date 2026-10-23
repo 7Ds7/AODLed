@@ -25,9 +25,9 @@ data class LightState(
     val colour: Int?,
     val offset: Offset,
     val cornerRadius: Float,
+    val aod: Boolean = false,
 )
 
-private const val GLOW_ALPHA = 0.7f
 private const val EDGE_COMET_SHARE = 0.2f  // comet length as a share of the screen border
 private const val EDGE_COMET_STEPS = 12
 
@@ -40,6 +40,7 @@ class LightRenderer {
     private val glow = Paint(Paint.ANTI_ALIAS_FLAG)
     private val pixel = Paint().apply { style = Paint.Style.FILL; isAntiAlias = false }
     private var glowBlur = -1f
+    private var aod = false
     private val rect = RectF()
     private val path = Path()
     private val segment = Path()
@@ -48,6 +49,7 @@ class LightRenderer {
     fun draw(canvas: Canvas, s: LightState, tMs: Long) {
         canvas.drawColor(Color.BLACK)
         val colour = s.colour ?: return
+        aod = s.aod
         val anim = effectiveAnimation(s.cfg.style, s.cfg.animation)
         val alpha = if (anim == Animation.PULSE) pulseAlpha(tMs) else 1f
         when (s.cfg.style) {
@@ -66,7 +68,7 @@ class LightRenderer {
             drawSwirl(canvas, cx, cy, r, colour, tMs)
         } else {
             val c = withAlpha(colour, alpha)
-            canvas.drawCircle(cx, cy, r, stroke(glowPaint(t), t, withAlpha(c, GLOW_ALPHA)))
+            canvas.drawCircle(cx, cy, r, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
             canvas.drawCircle(cx, cy, r, stroke(core, t, c))
         }
     }
@@ -76,7 +78,7 @@ class LightRenderer {
         val w = swirlStroke(r, tMs)
         if (w < 0.5f) return
         val faint = withAlpha(colour, SWIRL_FAINT_ALPHA)
-        canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(faint, GLOW_ALPHA)))
+        canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(faint, glowAlpha(aod))))
         canvas.drawCircle(cx, cy, r, stroke(core, w, faint))
         val bx = cx + swirlBandOffset(tMs) * r
         val half = SWIRL_BAND_WIDTH * r / 2
@@ -86,7 +88,7 @@ class LightRenderer {
         canvas.clipRect(-half, -4 * r, half, 4 * r)
         canvas.rotate(-SWIRL_BAND_ANGLE)
         canvas.translate(-bx, -cy)
-        canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(colour, GLOW_ALPHA)))
+        canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(colour, glowAlpha(aod))))
         canvas.drawCircle(cx, cy, r, stroke(core, w, colour))
         canvas.restore()
     }
@@ -95,7 +97,7 @@ class LightRenderer {
         val x = s.dot.x + s.offset.dx
         val y = s.dot.y + s.offset.dy
         val size = s.dot.size
-        canvas.drawCircle(x, y, maxOf(size / 2, 1f), fill(glowPaint(size), withAlpha(colour, GLOW_ALPHA)))
+        canvas.drawCircle(x, y, maxOf(size / 2, 1f), fill(glowPaint(size), withAlpha(colour, glowAlpha(aod))))
         if (size < 2.5f) {
             // 1x1 or 2x2 physical pixels: no anti-aliasing, snapped to the pixel grid
             pixel.color = colour
@@ -126,13 +128,13 @@ class LightRenderer {
                 val start = head - step * (EDGE_COMET_STEPS - i)
                 segment.reset()
                 addSegment(start, start + step, length)
-                canvas.drawPath(segment, stroke(glowPaint(t), t, withAlpha(colour, a * GLOW_ALPHA)))
+                canvas.drawPath(segment, stroke(glowPaint(t), t, withAlpha(colour, a * glowAlpha(aod))))
                 canvas.drawPath(segment, stroke(core, t, withAlpha(colour, a)).apply { strokeCap = Paint.Cap.ROUND })
             }
             core.strokeCap = Paint.Cap.BUTT
         } else {
             val c = withAlpha(colour, alpha)
-            canvas.drawRoundRect(rect, corner, corner, stroke(glowPaint(t), t, withAlpha(c, GLOW_ALPHA)))
+            canvas.drawRoundRect(rect, corner, corner, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
             canvas.drawRoundRect(rect, corner, corner, stroke(core, t, c))
         }
     }
@@ -146,7 +148,7 @@ class LightRenderer {
     }
 
     private fun glowPaint(thickness: Float): Paint {
-        val blur = glowRadius(thickness)
+        val blur = glowRadius(thickness, aod)
         if (blur != glowBlur) {
             glow.maskFilter = BlurMaskFilter(blur, BlurMaskFilter.Blur.NORMAL)
             glowBlur = blur

@@ -6,6 +6,7 @@ import com.binaryunit.aodled.render.PULSE_DARK_MS
 import com.binaryunit.aodled.render.PULSE_PERIOD_MS
 import com.binaryunit.aodled.render.ROTATE_PERIOD_MS
 import com.binaryunit.aodled.render.effectiveAnimation
+import com.binaryunit.aodled.render.glowAlpha
 import com.binaryunit.aodled.render.glowRadius
 import com.binaryunit.aodled.render.pulseAlpha
 import com.binaryunit.aodled.render.rotationAngle
@@ -39,6 +40,13 @@ class AnimationTest {
         assertEquals(4f, glowRadius(1f), 0.001f)
         assertEquals(6f, glowRadius(2f), 0.001f)
         assertEquals(24f, glowRadius(20f), 0.001f)
+    }
+
+    @Test fun `aod glow is tighter and full strength`() {
+        assertEquals(5f, glowRadius(5f, aod = true), 0.001f)
+        assertEquals(4f, glowRadius(1f, aod = true), 0.001f)
+        assertEquals(1f, glowAlpha(aod = true), 0.001f)
+        assertEquals(0.7f, glowAlpha(aod = false), 0.001f)
     }
 
     @Test fun `rotation is quick`() = assertEquals(true, com.binaryunit.aodled.render.ROTATE_PERIOD_MS <= 2000L)
