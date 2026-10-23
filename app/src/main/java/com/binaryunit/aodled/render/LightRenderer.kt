@@ -7,7 +7,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
-import android.graphics.SweepGradient
 import com.binaryunit.aodled.config.Animation
 import com.binaryunit.aodled.config.DotPlacement
 import com.binaryunit.aodled.config.LightConfig
@@ -29,7 +28,6 @@ data class LightState(
 )
 
 private const val GLOW_ALPHA = 0.7f
-private const val COMET_TAIL_START = 0.35f // share of the ring that stays dark ahead of the tail
 private const val EDGE_COMET_SHARE = 0.2f  // comet length as a share of the screen border
 private const val EDGE_COMET_STEPS = 12
 
@@ -46,8 +44,6 @@ class LightRenderer {
     private val path = Path()
     private val segment = Path()
     private val measure = PathMeasure()
-    private var comet: SweepGradient? = null
-    private var cometKey = Triple(0f, 0f, 0)
 
     fun draw(canvas: Canvas, s: LightState, tMs: Long) {
         canvas.drawColor(Color.BLACK)
@@ -67,20 +63,32 @@ class LightRenderer {
         val r = s.ring.radius
         val t = ringThickness(r)
         if (anim == Animation.ROTATE) {
-            // Comet: bright head with a fading tail, spinning around the camera
-            val shader = cometShader(cx, cy, colour)
-            canvas.save()
-            canvas.rotate(rotationAngle(tMs), cx, cy)
-            canvas.drawCircle(cx, cy, r, stroke(glowPaint(t), t, Color.WHITE).apply { this.shader = shader; this.alpha = (255 * GLOW_ALPHA).roundToInt() })
-            canvas.drawCircle(cx, cy, r, stroke(core, t, Color.WHITE).apply { this.shader = shader })
-            canvas.restore()
-            glow.shader = null
-            core.shader = null
+            drawSwirl(canvas, cx, cy, r, colour, tMs)
         } else {
             val c = withAlpha(colour, alpha)
             canvas.drawCircle(cx, cy, r, stroke(glowPaint(t), t, withAlpha(c, GLOW_ALPHA)))
             canvas.drawCircle(cx, cy, r, stroke(core, t, c))
         }
+    }
+
+    /** Faint ring that swells and thins, at full brightness only inside a sweeping 45° band. */
+    private fun drawSwirl(canvas: Canvas, cx: Float, cy: Float, r: Float, colour: Int, tMs: Long) {
+        val w = swirlWidth(tMs) * SWIRL_MAX_WIDTH * r
+        if (w < 0.5f) return
+        val faint = withAlpha(colour, SWIRL_FAINT_ALPHA)
+        canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(faint, GLOW_ALPHA)))
+        canvas.drawCircle(cx, cy, r, stroke(core, w, faint))
+        val bx = cx + swirlBandOffset(tMs) * r
+        val half = SWIRL_BAND_WIDTH * r / 2
+        canvas.save()
+        canvas.translate(bx, cy)
+        canvas.rotate(SWIRL_BAND_ANGLE)
+        canvas.clipRect(-half, -4 * r, half, 4 * r)
+        canvas.rotate(-SWIRL_BAND_ANGLE)
+        canvas.translate(-bx, -cy)
+        canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(colour, GLOW_ALPHA)))
+        canvas.drawCircle(cx, cy, r, stroke(core, w, colour))
+        canvas.restore()
     }
 
     private fun drawDot(canvas: Canvas, s: LightState, colour: Int) {
@@ -135,14 +143,6 @@ class LightRenderer {
         val b = a + (to - from)
         measure.getSegment(a, minOf(b, length), segment, true)
         if (b > length) measure.getSegment(0f, b - length, segment, true)
-    }
-
-    private fun cometShader(cx: Float, cy: Float, colour: Int): SweepGradient {
-        val key = Triple(cx, cy, colour)
-        comet?.takeIf { key == cometKey }?.let { return it }
-        val clear = colour and 0x00FFFFFF
-        return SweepGradient(cx, cy, intArrayOf(clear, clear, colour), floatArrayOf(0f, COMET_TAIL_START, 1f))
-            .also { comet = it; cometKey = key }
     }
 
     private fun glowPaint(thickness: Float): Paint {
