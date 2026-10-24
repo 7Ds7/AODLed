@@ -1,10 +1,11 @@
 package com.binaryunit.aodled.render
 
-// Cutout "snake": a line grows clockwise from the outline's leftmost point until it closes the shape, then is
-// erased from its start towards its end, then a dark pause. Lengths are fractions of one contour's length.
+// Cutout "snake": a line grows clockwise from the outline's leftmost point until it closes the shape, fast then
+// slowing down; then it is erased from its start towards its end, slow then speeding up; then a dark pause.
+// Lengths are fractions of one contour's length.
 
-const val SNAKE_GROW_MS = 600L
-const val SNAKE_ERASE_MS = 600L
+const val SNAKE_GROW_MS = 1000L
+const val SNAKE_ERASE_MS = 1000L
 const val SNAKE_DARK_MS = 300L
 const val SNAKE_PERIOD_MS = SNAKE_GROW_MS + SNAKE_ERASE_MS + SNAKE_DARK_MS
 
@@ -14,13 +15,15 @@ data class SnakeSpan(val tail: Float, val head: Float)
 fun snakeSpan(tMs: Long): SnakeSpan {
     val t = tMs % SNAKE_PERIOD_MS
     return when {
-        t < SNAKE_GROW_MS -> SnakeSpan(0f, ease(t.toFloat() / SNAKE_GROW_MS))
-        t < SNAKE_GROW_MS + SNAKE_ERASE_MS -> SnakeSpan(ease((t - SNAKE_GROW_MS).toFloat() / SNAKE_ERASE_MS), 1f)
+        t < SNAKE_GROW_MS -> SnakeSpan(0f, decelerate(t.toFloat() / SNAKE_GROW_MS))
+        t < SNAKE_GROW_MS + SNAKE_ERASE_MS -> SnakeSpan(accelerate((t - SNAKE_GROW_MS).toFloat() / SNAKE_ERASE_MS), 1f)
         else -> SnakeSpan(1f, 1f)
     }
 }
 
-private fun ease(x: Float) = cubicBezier(0.42f, 0f, 0.58f, 1f, x)
+// Material's standard decelerate and accelerate curves
+private fun decelerate(x: Float) = cubicBezier(0f, 0f, 0.2f, 1f, x)
+private fun accelerate(x: Float) = cubicBezier(0.4f, 0f, 1f, 1f, x)
 
 /** Index of the leftmost sample; on a flat left side (within half a pixel) the topmost of those. */
 fun snakeStart(xs: FloatArray, ys: FloatArray): Int {
