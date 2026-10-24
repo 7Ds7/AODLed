@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -35,6 +36,7 @@ import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
 
@@ -59,7 +61,7 @@ class SettingsActivity : AppCompatActivity() {
     private val lightOffs = mapOf(LightOff.ON_DISMISS to R.id.off_dismiss, LightOff.ON_UNLOCK to R.id.off_unlock)
 
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) TestNotifier.post(this)
+        if (granted) postTest()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,6 +78,8 @@ class SettingsActivity : AppCompatActivity() {
         statusRows = findViewById(R.id.status_rows)
         palette = findViewById(R.id.palette)
 
+        findViewById<View>(R.id.help_status).setOnClickListener { showHelp(it, R.string.help_status) }
+        findViewById<View>(R.id.help_light_off).setOnClickListener { showHelp(it, R.string.help_light_off) }
         cutout = cutoutPath()
         buildStyleMenu()
         bindToggle(R.id.animation_group, animations) { cfg.copy(animation = it) }
@@ -86,7 +90,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<View>(R.id.adjust).setOnClickListener { startActivity(Intent(this, EditorActivity::class.java)) }
         findViewById<View>(R.id.test).setOnClickListener {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                TestNotifier.post(this)
+                postTest()
             } else {
                 notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
@@ -105,6 +109,19 @@ class SettingsActivity : AppCompatActivity() {
             if (!checked || binding) return@addOnButtonCheckedListener
             save(update(ids.entries.first { it.value == id }.key))
         }
+    }
+
+    private fun postTest() {
+        TestNotifier.post(this)
+        Snackbar.make(findViewById(R.id.root), R.string.test_sent, Snackbar.LENGTH_LONG).show()
+    }
+
+    /** Small card next to a "?" icon; tapping anywhere else closes it. */
+    private fun showHelp(anchor: View, text: Int) {
+        val view = layoutInflater.inflate(R.layout.help_popup, null)
+        view.findViewById<TextView>(R.id.text).text = getText(text)
+        PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+            .showAsDropDown(anchor)
     }
 
     /** Style dropdown: each entry shows the style's shape; Cutout is greyed out without a camera cutout. */

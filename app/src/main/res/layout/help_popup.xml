@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Outer padding leaves room for the card's shadow inside the popup window -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <com.google.android.material.card.MaterialCardView
+        style="?attr/materialCardViewElevatedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="300dp"
+            android:padding="16dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </com.google.android.material.card.MaterialCardView>
+</FrameLayout>
