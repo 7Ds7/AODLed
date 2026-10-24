@@ -23,8 +23,8 @@ class SnakeTest {
         assertEquals(1f, snakeSpan(SNAKE_GROW_MS).head, 0f)
     }
 
-    @Test fun `trailing starts once 90 percent is drawn`() {
-        assertEquals(0.9f, snakeSpan(SNAKE_TRAIL_START_MS).head, 0.01f)
+    @Test fun `trailing starts once 95 percent is drawn`() {
+        assertEquals(0.95f, snakeSpan(SNAKE_TRAIL_START_MS).head, 0.01f)
         assertEquals(0f, snakeSpan(SNAKE_TRAIL_START_MS - 1).tail, 0f)
         assertTrue(snakeSpan(SNAKE_TRAIL_START_MS + 100).tail > 0f)
         assertTrue(snakeSpan(SNAKE_TRAIL_START_MS + 100).head < 1f)       // head still growing
@@ -52,7 +52,7 @@ class SnakeTest {
     @Test fun `cycle is trail start plus erase plus dark`() {
         assertEquals(1000L, SNAKE_GROW_MS)
         assertEquals(1000L, SNAKE_ERASE_MS)
-        assertTrue(SNAKE_TRAIL_START_MS in 550L..650L)                 // the grow is slow by then
+        assertTrue(SNAKE_TRAIL_START_MS in 650L..750L)                 // the grow is slow by then
         assertEquals(SNAKE_TRAIL_START_MS + SNAKE_ERASE_MS + SNAKE_DARK_MS, SNAKE_PERIOD_MS)
     }
 
