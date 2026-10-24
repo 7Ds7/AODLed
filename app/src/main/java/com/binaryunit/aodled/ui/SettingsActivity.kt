@@ -7,9 +7,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.net.Uri
+import android.graphics.Path
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -32,16 +35,24 @@ import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.textfield.TextInputLayout
+
+private const val DISABLED_ALPHA = 0.38f // Material's opacity for disabled content
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var cfg: LightConfig
     private lateinit var statusRows: LinearLayout
     private lateinit var palette: ChipGroup
+    private lateinit var styleField: TextInputLayout
+    private lateinit var styleMenu: MaterialAutoCompleteTextView
+    private var cutout: Path? = null
     private var binding = false // true while syncing controls from cfg, so listeners don't save
 
-    private val styles = mapOf(
-        Style.RING to R.id.style_ring, Style.DOT to R.id.style_dot, Style.EDGES to R.id.style_edges, Style.CUTOUT to R.id.style_cutout,
+    private val styleNames = mapOf(
+        Style.RING to R.string.style_ring, Style.DOT to R.string.style_dot,
+        Style.EDGES to R.string.style_edges, Style.CUTOUT to R.string.style_cutout,
     )
     private val animations = mapOf(Animation.OFF to R.id.anim_off, Animation.PULSE to R.id.anim_pulse, Animation.MOTION to R.id.anim_motion)
     private val colourModes = mapOf(ColourMode.APP to R.id.colour_app, ColourMode.FIXED to R.id.colour_fixed)
@@ -65,8 +76,8 @@ class SettingsActivity : AppCompatActivity() {
         statusRows = findViewById(R.id.status_rows)
         palette = findViewById(R.id.palette)
 
-        bindToggle(R.id.style_group, styles) { cfg.copy(style = it) }
-        findViewById<View>(R.id.style_cutout).isEnabled = cutoutPath() != null
+        cutout = cutoutPath()
+        buildStyleMenu()
         bindToggle(R.id.animation_group, animations) { cfg.copy(animation = it) }
         bindToggle(R.id.colour_group, colourModes) { cfg.copy(colourMode = it) }
         bindToggle(R.id.light_off_group, lightOffs) { cfg.copy(lightOff = it) }
@@ -96,6 +107,33 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /** Style dropdown: each entry shows the style's shape; Cutout is greyed out without a camera cutout. */
+    private fun buildStyleMenu() {
+        styleField = findViewById(R.id.style_field)
+        styleMenu = findViewById(R.id.style_menu)
+        styleMenu.setAdapter(object : ArrayAdapter<Style>(this, R.layout.item_style, R.id.name, Style.entries) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
+                super.getView(position, convertView, parent).apply {
+                    val style = Style.entries[position]
+                    findViewById<TextView>(R.id.name).setText(styleNames.getValue(style))
+                    findViewById<ImageView>(R.id.icon).setImageDrawable(styleIcon(style))
+                    alpha = if (isEnabled(position)) 1f else DISABLED_ALPHA
+                }
+
+            override fun areAllItemsEnabled() = cutout != null
+            override fun isEnabled(position: Int) = Style.entries[position] != Style.CUTOUT || cutout != null
+        })
+        styleMenu.setOnItemClickListener { _, _, position, _ ->
+            if (!binding) save(cfg.copy(style = Style.entries[position]))
+        }
+    }
+
+    private fun styleIcon(style: Style) = StyleIcon(
+        style, cutout,
+        MaterialColors.getColor(styleMenu, com.google.android.material.R.attr.colorOnSurfaceVariant),
+        (24 * resources.displayMetrics.density).toInt(),
+    )
+
     private fun buildPalette() {
         val names = resources.getStringArray(R.array.palette_names)
         Palette.ALL.forEachIndexed { i, colour ->
@@ -123,7 +161,8 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun syncControls() {
         binding = true
-        findViewById<MaterialButtonToggleGroup>(R.id.style_group).check(styles.getValue(cfg.style))
+        styleMenu.setText(getString(styleNames.getValue(cfg.style)), false)
+        styleField.startIconDrawable = styleIcon(cfg.style)
         findViewById<MaterialButtonToggleGroup>(R.id.animation_group).check(animations.getValue(cfg.animation))
         findViewById<MaterialButtonToggleGroup>(R.id.colour_group).check(colourModes.getValue(cfg.colourMode))
         findViewById<MaterialButtonToggleGroup>(R.id.light_off_group).check(lightOffs.getValue(cfg.lightOff))
