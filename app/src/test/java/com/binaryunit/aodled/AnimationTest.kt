@@ -14,10 +14,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class AnimationTest {
-    @Test fun `dot rotation becomes pulse`() {
-        assertEquals(Animation.PULSE, effectiveAnimation(Style.DOT, Animation.ROTATE))
-        assertEquals(Animation.ROTATE, effectiveAnimation(Style.RING, Animation.ROTATE))
-        assertEquals(Animation.ROTATE, effectiveAnimation(Style.EDGES, Animation.ROTATE))
+    @Test fun `dot motion becomes pulse`() {
+        assertEquals(Animation.PULSE, effectiveAnimation(Style.DOT, Animation.MOTION))
+        assertEquals(Animation.MOTION, effectiveAnimation(Style.RING, Animation.MOTION))
+        assertEquals(Animation.MOTION, effectiveAnimation(Style.EDGES, Animation.MOTION))
         assertEquals(Animation.OFF, effectiveAnimation(Style.DOT, Animation.OFF))
     }
 

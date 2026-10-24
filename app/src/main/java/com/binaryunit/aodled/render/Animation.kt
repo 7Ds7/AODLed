@@ -17,9 +17,9 @@ const val GLOW_ALPHA = 0.7f
 const val AOD_GLOW_FACTOR = 1f
 const val AOD_GLOW_ALPHA = 1f
 
-/** A dot can't rotate, so rotation falls back to pulse. */
+/** A dot can't move along a path, so Motion falls back to pulse. */
 fun effectiveAnimation(style: Style, anim: Animation): Animation =
-    if (style == Style.DOT && anim == Animation.ROTATE) Animation.PULSE else anim
+    if (style == Style.DOT && anim == Animation.MOTION) Animation.PULSE else anim
 
 /** Fades fully out, stays black for [PULSE_DARK_MS], fades back in; 1.0 at the start of each period. */
 fun pulseAlpha(tMs: Long): Float {

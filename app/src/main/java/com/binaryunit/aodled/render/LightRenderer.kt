@@ -64,7 +64,7 @@ class LightRenderer {
         val cy = s.ring.cy + s.offset.dy
         val r = s.ring.radius
         val t = ringThickness(r)
-        if (anim == Animation.ROTATE) {
+        if (anim == Animation.MOTION) {
             drawSwirl(canvas, cx, cy, r, colour, tMs)
         } else {
             val c = withAlpha(colour, alpha)
@@ -115,7 +115,7 @@ class LightRenderer {
         val inset = t / 2 + abs(s.offset.dx)
         val corner = maxOf(0f, s.cornerRadius - inset)
         rect.set(inset, inset, canvas.width - inset, canvas.height - inset)
-        if (anim == Animation.ROTATE) {
+        if (anim == Animation.MOTION) {
             // Comet along the border: short segments brightening from tail to head
             path.reset()
             path.addRoundRect(rect, corner, corner, Path.Direction.CW)

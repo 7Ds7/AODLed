@@ -40,7 +40,7 @@ class SettingsActivity : AppCompatActivity() {
     private var binding = false // true while syncing controls from cfg, so listeners don't save
 
     private val styles = mapOf(Style.RING to R.id.style_ring, Style.DOT to R.id.style_dot, Style.EDGES to R.id.style_edges)
-    private val animations = mapOf(Animation.OFF to R.id.anim_off, Animation.PULSE to R.id.anim_pulse, Animation.ROTATE to R.id.anim_rotate)
+    private val animations = mapOf(Animation.OFF to R.id.anim_off, Animation.PULSE to R.id.anim_pulse, Animation.MOTION to R.id.anim_motion)
     private val colourModes = mapOf(ColourMode.APP to R.id.colour_app, ColourMode.FIXED to R.id.colour_fixed)
     private val lightOffs = mapOf(LightOff.ON_DISMISS to R.id.off_dismiss, LightOff.ON_UNLOCK to R.id.off_unlock)
 

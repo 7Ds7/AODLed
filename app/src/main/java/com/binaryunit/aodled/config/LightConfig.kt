@@ -1,7 +1,7 @@
 package com.binaryunit.aodled.config
 
 enum class Style { RING, DOT, EDGES }
-enum class Animation { OFF, PULSE, ROTATE }
+enum class Animation { OFF, PULSE, MOTION }
 enum class ColourMode { APP, FIXED }
 enum class LightOff { ON_DISMISS, ON_UNLOCK }
 

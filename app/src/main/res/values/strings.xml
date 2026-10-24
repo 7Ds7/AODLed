@@ -15,7 +15,7 @@
     <string name="setting_animation">Animation</string>
     <string name="anim_off">Off</string>
     <string name="anim_pulse">Pulse</string>
-    <string name="anim_rotate">Swirl</string>
+    <string name="anim_motion">Motion</string>
     <string name="setting_colour">Colour</string>
     <string name="colour_app">App colours</string>
     <string name="colour_fixed">Fixed colour</string>
