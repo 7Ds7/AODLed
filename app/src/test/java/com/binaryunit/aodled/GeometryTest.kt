@@ -75,6 +75,13 @@ class GeometryTest {
         assertEquals(52f / 44f, c.scale, 0.001f)                       // 44 + RING_GAP
     }
 
+    @Test fun `default cutout with two holes sizes by one hole and centres on both`() {
+        val c = defaultCutout(Box(400f, 0f, 680f, 2424f), halfSize = 44f)
+        assertEquals(540f, c.cx, 0.001f)
+        assertEquals(1212f, c.cy, 0.001f)
+        assertEquals(52f / 44f, c.scale, 0.001f)
+    }
+
     @Test fun `half size uses the longer side`() = assertEquals(60f, Box(0f, 0f, 120f, 40f).halfSize, 0.001f)
 
     @Test fun `cutout pinch clamps on the scaled half size`() {

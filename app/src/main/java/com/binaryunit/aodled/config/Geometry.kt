@@ -31,9 +31,12 @@ fun defaultDot(cutout: Box?, screenWidth: Int): DotPlacement {
     return DotPlacement(cutout.centreX, cutout.bottom + DOT_GAP, DOT_DEFAULT)
 }
 
-/** Centred on the cutout, scaled so the line sits [RING_GAP] outside it (exactly so on a round hole). */
-fun defaultCutout(bounds: Box): CutoutPlacement =
-    CutoutPlacement(bounds.centreX, bounds.centreY, (bounds.halfSize + RING_GAP) / bounds.halfSize)
+/**
+ * Centred on the whole cutout, scaled so the line sits [RING_GAP] outside it (exactly so on a round hole).
+ * [halfSize] is that of the largest single hole, so two holes far apart still get a snug outline.
+ */
+fun defaultCutout(bounds: Box, halfSize: Float = bounds.halfSize): CutoutPlacement =
+    CutoutPlacement(bounds.centreX, bounds.centreY, (halfSize + RING_GAP) / halfSize)
 
 fun ringThickness(radius: Float): Float = maxOf(1f, radius * RING_THICKNESS_RATIO)
 

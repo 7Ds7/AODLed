@@ -27,6 +27,7 @@ import com.binaryunit.aodled.render.ANIM_FPS
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
 import com.binaryunit.aodled.render.box
+import com.binaryunit.aodled.render.contourHalfSize
 import com.binaryunit.aodled.render.cornerRadius
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
@@ -198,7 +199,7 @@ class OverlayService : AccessibilityService() {
             offset = offset,
             cornerRadius = cornerRadius(),
             aod = true,
-            cutout = cfg.cutout ?: path?.let { defaultCutout(it.box()) },
+            cutout = cfg.cutout ?: path?.let { defaultCutout(it.box(), it.contourHalfSize()) },
             cutoutPath = path,
         )
         wake.poke()

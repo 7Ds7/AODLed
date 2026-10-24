@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Path
+import android.graphics.PathMeasure
 import android.graphics.RectF
 import android.hardware.display.DisplayManager
 import android.os.SystemClock
@@ -13,6 +14,7 @@ import android.view.RoundedCorner
 import android.view.View
 import android.view.WindowManager
 import com.binaryunit.aodled.config.Box
+import com.binaryunit.aodled.config.halfSize
 
 class LightView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     private val renderer = LightRenderer()
@@ -52,3 +54,17 @@ fun Context.cutoutPath(): Path? =
         ?.takeUnless { it.isEmpty }
 
 fun Path.box(): Box = RectF().also { computeBounds(it, true) }.let { Box(it.left, it.top, it.right, it.bottom) }
+
+/** Each closed contour (one per hole) as its own path. */
+fun Path.contours(): List<Path> {
+    val m = PathMeasure(this, true)
+    val out = mutableListOf<Path>()
+    do {
+        val c = Path()
+        if (m.getSegment(0f, m.length, c, true)) out += c.apply { close() }
+    } while (m.nextContour())
+    return out
+}
+
+/** Half size of the largest single hole: what outline size and thickness are based on. */
+fun Path.contourHalfSize(): Float = contours().maxOf { it.box().halfSize }

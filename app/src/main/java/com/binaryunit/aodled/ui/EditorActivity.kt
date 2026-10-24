@@ -21,7 +21,6 @@ import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
 import com.binaryunit.aodled.config.defaultRing
-import com.binaryunit.aodled.config.halfSize
 import com.binaryunit.aodled.config.moved
 import com.binaryunit.aodled.config.pinched
 import com.binaryunit.aodled.config.pinchedEdge
@@ -29,6 +28,7 @@ import com.binaryunit.aodled.config.resetPlacement
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
 import com.binaryunit.aodled.render.box
+import com.binaryunit.aodled.render.contourHalfSize
 import com.binaryunit.aodled.render.cornerRadius
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
@@ -47,6 +47,7 @@ class EditorActivity : AppCompatActivity() {
     private var cutout: Box? = null
     private var cutoutPath: Path? = null
     private var cutoutBox: Box? = null
+    private var cutoutHalf = 0f
     private var lastX = Float.NaN
     private var lastY = Float.NaN
     private var animating = false
@@ -85,6 +86,7 @@ class EditorActivity : AppCompatActivity() {
         cutout = c
         cutoutPath = cutoutPath()
         cutoutBox = cutoutPath?.box()
+        cutoutHalf = cutoutPath?.contourHalfSize() ?: 0f
         cornerRadius = cornerRadius()
         cfg = withDefaults(prefs.load())
 
@@ -112,7 +114,7 @@ class EditorActivity : AppCompatActivity() {
                     Style.RING -> cfg.copy(ring = cfg.ring!!.pinched(f))
                     Style.DOT -> cfg.copy(dot = cfg.dot!!.pinched(f))
                     Style.EDGES -> cfg.copy(edgeThickness = pinchedEdge(cfg.edgeThickness, f))
-                    Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.pinched(f, cutoutBox!!.halfSize)) } ?: cfg
+                    Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.pinched(f, cutoutHalf)) } ?: cfg
                 }
                 render()
                 return true
@@ -140,7 +142,7 @@ class EditorActivity : AppCompatActivity() {
         c.copy(
             ring = c.ring ?: defaultRing(cutout, width),
             dot = c.dot ?: defaultDot(cutout, width),
-            cutout = c.cutout ?: cutoutBox?.let(::defaultCutout),
+            cutout = c.cutout ?: cutoutBox?.let { defaultCutout(it, cutoutHalf) },
         )
 
     private fun drag(e: MotionEvent) {
