@@ -23,10 +23,10 @@ class SnakeTest {
         assertEquals(1f, snakeSpan(SNAKE_GROW_MS).head, 0f)
     }
 
-    @Test fun `trailing starts at 90 percent of the drawing time`() {
-        assertEquals(900L, SNAKE_TRAIL_START_MS)
+    @Test fun `trailing starts at 85 percent of the drawing time`() {
+        assertEquals(850L, SNAKE_TRAIL_START_MS)
         assertEquals(0f, snakeSpan(SNAKE_TRAIL_START_MS - 1).tail, 0f)
-        assertTrue(snakeSpan(SNAKE_TRAIL_START_MS).head > 0.99f)            // visibly at the end
+        assertTrue(snakeSpan(SNAKE_TRAIL_START_MS).head > 0.98f)            // visibly at the end
         assertTrue(snakeSpan(SNAKE_TRAIL_START_MS + 20).tail > 0f)
         assertTrue(snakeSpan(SNAKE_TRAIL_START_MS + 20).head < 1f)          // still drawing the last bit
     }
