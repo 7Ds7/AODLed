@@ -3,6 +3,8 @@ package com.binaryunit.aodled.render
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Path
+import android.graphics.RectF
 import android.hardware.display.DisplayManager
 import android.os.SystemClock
 import android.util.AttributeSet
@@ -43,3 +45,10 @@ fun Context.cornerRadius(): Float {
     val display = getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)
     return (display?.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)?.radius ?: 0).toFloat()
 }
+
+/** The camera cutout's real outline in screen pixels, or null without one. */
+fun Context.cutoutPath(): Path? =
+    getSystemService(WindowManager::class.java).maximumWindowMetrics.windowInsets.displayCutout?.cutoutPath
+        ?.takeUnless { it.isEmpty }
+
+fun Path.box(): Box = RectF().also { computeBounds(it, true) }.let { Box(it.left, it.top, it.right, it.bottom) }

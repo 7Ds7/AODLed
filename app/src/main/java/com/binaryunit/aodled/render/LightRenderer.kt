@@ -3,11 +3,13 @@ package com.binaryunit.aodled.render
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
 import com.binaryunit.aodled.config.Animation
+import com.binaryunit.aodled.config.CutoutPlacement
 import com.binaryunit.aodled.config.DotPlacement
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Offset
@@ -26,10 +28,16 @@ data class LightState(
     val offset: Offset,
     val cornerRadius: Float,
     val aod: Boolean = false,
+    val cutout: CutoutPlacement? = null,
+    val cutoutPath: Path? = null,
 )
 
 private const val EDGE_COMET_SHARE = 0.2f  // comet length as a share of the screen border
 private const val EDGE_COMET_STEPS = 12
+private const val CUTOUT_SAMPLES = 64       // points per contour used to find its leftmost point and winding
+
+/** Where the snake starts on a contour (fraction of its length) and which way is clockwise on screen. */
+private class Contour(val startFraction: Float, val clockwise: Boolean)
 
 /**
  * Shared by the doze overlay and the editor, so what you place is what you get. Every shape is drawn twice:
@@ -45,6 +53,11 @@ class LightRenderer {
     private val path = Path()
     private val segment = Path()
     private val measure = PathMeasure()
+    private val matrix = Matrix()
+    private val scaledPath = Path()
+    private val pos = FloatArray(2)
+    private var contoursFor: Path? = null
+    private var contours: List<Contour> = emptyList()
 
     fun draw(canvas: Canvas, s: LightState, tMs: Long) {
         canvas.drawColor(Color.BLACK)
@@ -56,6 +69,12 @@ class LightRenderer {
             Style.RING -> drawRing(canvas, s, colour, alpha, anim, tMs)
             Style.DOT -> drawDot(canvas, s, withAlpha(colour, alpha))
             Style.EDGES -> drawEdges(canvas, s, colour, alpha, anim, tMs)
+            Style.CUTOUT -> {
+                val placement = s.cutout
+                val source = s.cutoutPath
+                if (placement == null || source == null) drawRing(canvas, s, colour, alpha, anim, tMs)
+                else drawCutout(canvas, s, placement, source, colour, alpha, anim, tMs)
+            }
         }
     }
 
@@ -137,6 +156,59 @@ class LightRenderer {
             canvas.drawRoundRect(rect, corner, corner, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
             canvas.drawRoundRect(rect, corner, corner, stroke(core, t, c))
         }
+    }
+
+    /** The cutout's own outline, scaled and moved; with Motion a snake runs along each contour. */
+    private fun drawCutout(
+        canvas: Canvas, s: LightState, p: CutoutPlacement, source: Path, colour: Int, alpha: Float, anim: Animation, tMs: Long,
+    ) {
+        source.computeBounds(rect, true)
+        val bx = rect.centerX()
+        val by = rect.centerY()
+        val t = ringThickness(maxOf(rect.width(), rect.height()) / 2 * p.scale)
+        matrix.setScale(p.scale, p.scale, bx, by)
+        matrix.postTranslate(p.cx - bx + s.offset.dx, p.cy - by + s.offset.dy)
+        source.transform(matrix, scaledPath)
+        if (anim != Animation.MOTION) {
+            val c = withAlpha(colour, alpha)
+            canvas.drawPath(scaledPath, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
+            canvas.drawPath(scaledPath, stroke(core, t, c))
+            return
+        }
+        val span = snakeSpan(tMs)
+        if (span.head - span.tail < 1e-3f) return
+        // Scaling and moving don't change where a contour starts or its winding, so measure the source once
+        if (contoursFor !== source) {
+            contours = contoursOf(source)
+            contoursFor = source
+        }
+        measure.setPath(scaledPath, true)
+        var i = 0
+        do {
+            val contour = contours.getOrNull(i++) ?: break
+            val length = measure.length
+            val (from, to) = snakeRange(contour.startFraction * length, length, span, contour.clockwise)
+            segment.reset()
+            addSegment(from, to, length)
+            canvas.drawPath(segment, stroke(glowPaint(t), t, withAlpha(colour, glowAlpha(aod))))
+            canvas.drawPath(segment, stroke(core, t, colour))
+        } while (measure.nextContour())
+    }
+
+    private fun contoursOf(source: Path): List<Contour> {
+        val m = PathMeasure(source, true)
+        val xs = FloatArray(CUTOUT_SAMPLES)
+        val ys = FloatArray(CUTOUT_SAMPLES)
+        val out = mutableListOf<Contour>()
+        do {
+            for (k in 0 until CUTOUT_SAMPLES) {
+                m.getPosTan(m.length * k / CUTOUT_SAMPLES, pos, null)
+                xs[k] = pos[0]
+                ys[k] = pos[1]
+            }
+            out += Contour(snakeStart(xs, ys).toFloat() / CUTOUT_SAMPLES, isClockwise(xs, ys))
+        } while (m.nextContour())
+        return out
     }
 
     /** Appends [from, to) of the measured closed path to [segment], wrapping around its start. */

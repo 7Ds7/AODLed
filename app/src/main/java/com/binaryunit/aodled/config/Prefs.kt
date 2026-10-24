@@ -22,6 +22,9 @@ class Prefs(context: Context) {
             dot = if (prefs.contains(KEY_DOT_X)) DotPlacement(
                 prefs.getFloat(KEY_DOT_X, 0f), prefs.getFloat(KEY_DOT_Y, 0f), prefs.getFloat(KEY_DOT_SIZE, DOT_DEFAULT)
             ) else null,
+            cutout = if (prefs.contains(KEY_CUTOUT_CX)) CutoutPlacement(
+                prefs.getFloat(KEY_CUTOUT_CX, 0f), prefs.getFloat(KEY_CUTOUT_CY, 0f), prefs.getFloat(KEY_CUTOUT_SCALE, 1f)
+            ) else null,
             edgeThickness = prefs.getFloat(KEY_EDGE, d.edgeThickness),
         )
     }
@@ -42,6 +45,11 @@ class Prefs(context: Context) {
                 putFloat(KEY_DOT_X, c.dot.x); putFloat(KEY_DOT_Y, c.dot.y); putFloat(KEY_DOT_SIZE, c.dot.size)
             } else {
                 remove(KEY_DOT_X); remove(KEY_DOT_Y); remove(KEY_DOT_SIZE)
+            }
+            if (c.cutout != null) {
+                putFloat(KEY_CUTOUT_CX, c.cutout.cx); putFloat(KEY_CUTOUT_CY, c.cutout.cy); putFloat(KEY_CUTOUT_SCALE, c.cutout.scale)
+            } else {
+                remove(KEY_CUTOUT_CX); remove(KEY_CUTOUT_CY); remove(KEY_CUTOUT_SCALE)
             }
             putFloat(KEY_EDGE, c.edgeThickness)
         }.apply()
@@ -72,6 +80,9 @@ class Prefs(context: Context) {
         const val KEY_DOT_X = "dot_x"
         const val KEY_DOT_Y = "dot_y"
         const val KEY_DOT_SIZE = "dot_size"
+        const val KEY_CUTOUT_CX = "cutout_cx"
+        const val KEY_CUTOUT_CY = "cutout_cy"
+        const val KEY_CUTOUT_SCALE = "cutout_scale"
         const val KEY_EDGE = "edge_thickness"
     }
 }

@@ -101,6 +101,7 @@ class EditorActivity : AppCompatActivity() {
                     Style.RING -> cfg.copy(ring = cfg.ring!!.pinched(f))
                     Style.DOT -> cfg.copy(dot = cfg.dot!!.pinched(f))
                     Style.EDGES -> cfg.copy(edgeThickness = pinchedEdge(cfg.edgeThickness, f))
+                    Style.CUTOUT -> cfg
                 }
                 render()
                 return true
@@ -145,6 +146,7 @@ class EditorActivity : AppCompatActivity() {
             Style.RING -> cfg.copy(ring = cfg.ring!!.moved(dx, dy, width, height))
             Style.DOT -> cfg.copy(dot = cfg.dot!!.moved(dx, dy, width, height))
             Style.EDGES -> cfg
+            Style.CUTOUT -> cfg
         }
         render()
     }

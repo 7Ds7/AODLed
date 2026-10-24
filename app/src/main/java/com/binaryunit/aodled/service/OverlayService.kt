@@ -20,12 +20,15 @@ import com.binaryunit.aodled.config.BurnIn
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.config.Prefs
+import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
 import com.binaryunit.aodled.config.defaultRing
 import com.binaryunit.aodled.render.ANIM_FPS
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
+import com.binaryunit.aodled.render.box
 import com.binaryunit.aodled.render.cornerRadius
+import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
 import com.binaryunit.aodled.render.screenGeometry
 import kotlin.random.Random
@@ -185,6 +188,7 @@ class OverlayService : AccessibilityService() {
     private fun refresh() {
         val v = view ?: return
         val (width, _, cutout) = screenGeometry()
+        val path = cutoutPath()
         val colour = AppState.tracker.current(cfg.lightOff)?.let { displayColour(it.colour, cfg) }
         val state = LightState(
             cfg = cfg,
@@ -194,6 +198,8 @@ class OverlayService : AccessibilityService() {
             offset = offset,
             cornerRadius = cornerRadius(),
             aod = true,
+            cutout = cfg.cutout ?: path?.let { defaultCutout(it.box()) },
+            cutoutPath = path,
         )
         wake.poke()
         v.state = state
