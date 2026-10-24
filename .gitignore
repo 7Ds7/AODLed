@@ -4,3 +4,6 @@ local.properties
 *.iml
 .idea/
 .superpowers/
+keystore.properties
+*.jks
+*.keystore
