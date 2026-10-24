@@ -4,6 +4,7 @@
     <string name="style_ring">Ring</string>
     <string name="style_dot">Dot</string>
     <string name="style_edges">Edges</string>
+    <string name="style_cutout">Cutout</string>
     <string name="done">Done</string>
     <string name="reset">Reset</string>
     <string name="editor_hint">Drag to move · pinch to resize</string>

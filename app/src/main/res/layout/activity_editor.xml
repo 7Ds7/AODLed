@@ -43,6 +43,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:paddingHorizontal="8dp"
                 android:text="@string/style_ring" />
 
             <Button
@@ -51,6 +52,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:paddingHorizontal="8dp"
                 android:text="@string/style_dot" />
 
             <Button
@@ -59,7 +61,17 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:paddingHorizontal="8dp"
                 android:text="@string/style_edges" />
+
+            <Button
+                android:id="@+id/style_cutout"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingHorizontal="8dp"
+                android:text="@string/style_cutout" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <LinearLayout

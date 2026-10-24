@@ -26,6 +26,7 @@ import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.LightOff
 import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.config.Style
+import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.service.LightListenerService
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.chip.Chip
@@ -39,7 +40,9 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var palette: ChipGroup
     private var binding = false // true while syncing controls from cfg, so listeners don't save
 
-    private val styles = mapOf(Style.RING to R.id.style_ring, Style.DOT to R.id.style_dot, Style.EDGES to R.id.style_edges)
+    private val styles = mapOf(
+        Style.RING to R.id.style_ring, Style.DOT to R.id.style_dot, Style.EDGES to R.id.style_edges, Style.CUTOUT to R.id.style_cutout,
+    )
     private val animations = mapOf(Animation.OFF to R.id.anim_off, Animation.PULSE to R.id.anim_pulse, Animation.MOTION to R.id.anim_motion)
     private val colourModes = mapOf(ColourMode.APP to R.id.colour_app, ColourMode.FIXED to R.id.colour_fixed)
     private val lightOffs = mapOf(LightOff.ON_DISMISS to R.id.off_dismiss, LightOff.ON_UNLOCK to R.id.off_unlock)
@@ -63,6 +66,7 @@ class SettingsActivity : AppCompatActivity() {
         palette = findViewById(R.id.palette)
 
         bindToggle(R.id.style_group, styles) { cfg.copy(style = it) }
+        findViewById<View>(R.id.style_cutout).isEnabled = cutoutPath() != null
         bindToggle(R.id.animation_group, animations) { cfg.copy(animation = it) }
         bindToggle(R.id.colour_group, colourModes) { cfg.copy(colourMode = it) }
         bindToggle(R.id.light_off_group, lightOffs) { cfg.copy(lightOff = it) }

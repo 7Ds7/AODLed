@@ -1,6 +1,7 @@
 package com.binaryunit.aodled.ui
 
 import android.annotation.SuppressLint
+import android.graphics.Path
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -17,15 +18,19 @@ import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.config.Style
+import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
 import com.binaryunit.aodled.config.defaultRing
+import com.binaryunit.aodled.config.halfSize
 import com.binaryunit.aodled.config.moved
 import com.binaryunit.aodled.config.pinched
 import com.binaryunit.aodled.config.pinchedEdge
 import com.binaryunit.aodled.config.resetPlacement
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
+import com.binaryunit.aodled.render.box
 import com.binaryunit.aodled.render.cornerRadius
+import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
 import com.binaryunit.aodled.render.screenGeometry
 import com.google.android.material.button.MaterialButtonToggleGroup
@@ -40,6 +45,8 @@ class EditorActivity : AppCompatActivity() {
     private var height = 0
     private var cornerRadius = 0f
     private var cutout: Box? = null
+    private var cutoutPath: Path? = null
+    private var cutoutBox: Box? = null
     private var lastX = Float.NaN
     private var lastY = Float.NaN
     private var animating = false
@@ -48,6 +55,7 @@ class EditorActivity : AppCompatActivity() {
         Style.RING to R.id.style_ring,
         Style.DOT to R.id.style_dot,
         Style.EDGES to R.id.style_edges,
+        Style.CUTOUT to R.id.style_cutout,
     )
 
     private val tick = object : Runnable {
@@ -75,10 +83,13 @@ class EditorActivity : AppCompatActivity() {
         width = w
         height = h
         cutout = c
+        cutoutPath = cutoutPath()
+        cutoutBox = cutoutPath?.box()
         cornerRadius = cornerRadius()
         cfg = withDefaults(prefs.load())
 
         val group = findViewById<MaterialButtonToggleGroup>(R.id.styles)
+        findViewById<android.view.View>(R.id.style_cutout).isEnabled = cutoutPath != null
         group.check(styleButtons.getValue(cfg.style))
         group.addOnButtonCheckedListener { _, id, checked ->
             if (!checked) return@addOnButtonCheckedListener
@@ -101,7 +112,7 @@ class EditorActivity : AppCompatActivity() {
                     Style.RING -> cfg.copy(ring = cfg.ring!!.pinched(f))
                     Style.DOT -> cfg.copy(dot = cfg.dot!!.pinched(f))
                     Style.EDGES -> cfg.copy(edgeThickness = pinchedEdge(cfg.edgeThickness, f))
-                    Style.CUTOUT -> cfg
+                    Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.pinched(f, cutoutBox!!.halfSize)) } ?: cfg
                 }
                 render()
                 return true
@@ -126,7 +137,11 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun withDefaults(c: LightConfig) =
-        c.copy(ring = c.ring ?: defaultRing(cutout, width), dot = c.dot ?: defaultDot(cutout, width))
+        c.copy(
+            ring = c.ring ?: defaultRing(cutout, width),
+            dot = c.dot ?: defaultDot(cutout, width),
+            cutout = c.cutout ?: cutoutBox?.let(::defaultCutout),
+        )
 
     private fun drag(e: MotionEvent) {
         // Only single-finger moves drag; reset on any pointer change so a pinch never makes the light jump
@@ -146,7 +161,7 @@ class EditorActivity : AppCompatActivity() {
             Style.RING -> cfg.copy(ring = cfg.ring!!.moved(dx, dy, width, height))
             Style.DOT -> cfg.copy(dot = cfg.dot!!.moved(dx, dy, width, height))
             Style.EDGES -> cfg
-            Style.CUTOUT -> cfg
+            Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.moved(dx, dy, width, height)) } ?: cfg
         }
         render()
     }
@@ -154,7 +169,9 @@ class EditorActivity : AppCompatActivity() {
     private fun render() {
         hint.setText(if (cfg.style == Style.EDGES) R.string.editor_hint_edges else R.string.editor_hint)
         val colour = if (cfg.colourMode == ColourMode.FIXED) cfg.fixedColour else Palette.WHITE
-        light.state = LightState(cfg, cfg.ring!!, cfg.dot!!, colour, Offset(0, 0), cornerRadius)
+        light.state = LightState(
+            cfg, cfg.ring!!, cfg.dot!!, colour, Offset(0, 0), cornerRadius, cutout = cfg.cutout, cutoutPath = cutoutPath,
+        )
         val wantAnim = effectiveAnimation(cfg.style, cfg.animation) != Animation.OFF
         if (wantAnim && !animating) {
             animating = true
