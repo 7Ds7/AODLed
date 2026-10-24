@@ -1,0 +1,47 @@
+package com.binaryunit.aodled.render
+
+// Cutout "snake": a line grows clockwise from the outline's leftmost point until it closes the shape, then is
+// erased from its start towards its end, then a dark pause. Lengths are fractions of one contour's length.
+
+const val SNAKE_GROW_MS = 600L
+const val SNAKE_ERASE_MS = 600L
+const val SNAKE_DARK_MS = 300L
+const val SNAKE_PERIOD_MS = SNAKE_GROW_MS + SNAKE_ERASE_MS + SNAKE_DARK_MS
+
+/** The lit part of a contour, from [tail] to [head], as fractions of its length. */
+data class SnakeSpan(val tail: Float, val head: Float)
+
+fun snakeSpan(tMs: Long): SnakeSpan {
+    val t = tMs % SNAKE_PERIOD_MS
+    return when {
+        t < SNAKE_GROW_MS -> SnakeSpan(0f, ease(t.toFloat() / SNAKE_GROW_MS))
+        t < SNAKE_GROW_MS + SNAKE_ERASE_MS -> SnakeSpan(ease((t - SNAKE_GROW_MS).toFloat() / SNAKE_ERASE_MS), 1f)
+        else -> SnakeSpan(1f, 1f)
+    }
+}
+
+private fun ease(x: Float) = cubicBezier(0.42f, 0f, 0.58f, 1f, x)
+
+/** Index of the leftmost sample; on a flat left side (within half a pixel) the topmost of those. */
+fun snakeStart(xs: FloatArray, ys: FloatArray): Int {
+    val minX = xs.min()
+    return xs.indices.filter { xs[it] - minX < 0.5f }.minBy { ys[it] }
+}
+
+/** Winding as seen on screen (y grows downwards), from the shoelace sum. */
+fun isClockwise(xs: FloatArray, ys: FloatArray): Boolean {
+    var sum = 0f
+    for (i in xs.indices) {
+        val j = (i + 1) % xs.size
+        sum += xs[i] * ys[j] - xs[j] * ys[i]
+    }
+    return sum > 0
+}
+
+/**
+ * Distances (from, to) along a contour of [length] to light for [span], starting at [start] and running clockwise
+ * on screen. Not wrapped: either end may fall outside 0..length.
+ */
+fun snakeRange(start: Float, length: Float, span: SnakeSpan, clockwise: Boolean): Pair<Float, Float> =
+    if (clockwise) start + span.tail * length to start + span.head * length
+    else start - span.head * length to start - span.tail * length
