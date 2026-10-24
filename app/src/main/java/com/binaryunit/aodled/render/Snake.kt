@@ -1,14 +1,17 @@
 package com.binaryunit.aodled.render
 
 // Cutout "snake": a line grows clockwise from the outline's leftmost point until it closes the shape, fast then
-// slowing down. For the last 15% of the drawing time the erase already runs behind it, from the start towards
-// the end, slow then speeding up; then a dark pause. Lengths are fractions of one contour's length.
+// slowing down. Once the line is 85% of the way round the erase starts behind it, from the start towards the
+// end, slow then speeding up; then a dark pause. Lengths are fractions of one contour's length.
 
 const val SNAKE_GROW_MS = 1000L
 const val SNAKE_ERASE_MS = 1000L
 const val SNAKE_DARK_MS = 300L
-const val SNAKE_TRAIL_START_MS = SNAKE_GROW_MS * 85 / 100 // the erase starts at 85% of the drawing time
-const val SNAKE_PERIOD_MS = SNAKE_TRAIL_START_MS + SNAKE_ERASE_MS + SNAKE_DARK_MS
+const val SNAKE_TRAIL_AT = 0.85f // share of the outline drawn when the erase starts behind the head
+
+/** First millisecond at which the line has drawn [SNAKE_TRAIL_AT] of the outline. */
+val SNAKE_TRAIL_START_MS: Long = (0..SNAKE_GROW_MS).first { decelerate(it.toFloat() / SNAKE_GROW_MS) >= SNAKE_TRAIL_AT }
+val SNAKE_PERIOD_MS = SNAKE_TRAIL_START_MS + SNAKE_ERASE_MS + SNAKE_DARK_MS
 
 /** The lit part of a contour, from [tail] to [head], as fractions of its length. */
 data class SnakeSpan(val tail: Float, val head: Float)
