@@ -12,5 +12,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "AODLed"
-include(":spike")
 include(":app")
