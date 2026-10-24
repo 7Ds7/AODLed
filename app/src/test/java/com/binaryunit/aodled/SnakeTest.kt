@@ -23,9 +23,9 @@ class SnakeTest {
         assertEquals(1f, snakeSpan(SNAKE_GROW_MS).head, 0f)
     }
 
-    @Test fun `trailing starts once the line is 85 percent round`() {
-        assertEquals(0.85f, snakeSpan(SNAKE_TRAIL_START_MS).head, 0.01f)
-        assertTrue(SNAKE_TRAIL_START_MS in 480L..560L)                      // the line is fast at first
+    @Test fun `trailing starts once the line is 95 percent round`() {
+        assertEquals(0.95f, snakeSpan(SNAKE_TRAIL_START_MS).head, 0.01f)
+        assertTrue(SNAKE_TRAIL_START_MS in 680L..740L)                      // the line is fast at first
         assertEquals(0f, snakeSpan(SNAKE_TRAIL_START_MS - 1).tail, 0f)
         assertTrue(snakeSpan(SNAKE_TRAIL_START_MS + 100).tail > 0f)
         assertTrue(snakeSpan(SNAKE_TRAIL_START_MS + 100).head < 1f)         // still drawing the rest
