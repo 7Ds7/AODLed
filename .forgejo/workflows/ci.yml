@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: docker
+    # A Node image because actions/checkout is a JavaScript action. Debian trixie
+    # ships JDK 21, the same version as the local build.
+    container:
+      image: node:24-trixie-slim
+
+    env:
+      ANDROID_HOME: /opt/android-sdk
+
+    steps:
+      - name: Install JDK 21
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl git openjdk-21-jdk-headless unzip
+
+      # cmdline-tools 22.0, the version installed locally; checksum of Google's zip.
+      - name: Install Android SDK
+        run: |
+          curl -fsSLo /tmp/cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip
+          echo "4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583  /tmp/cmdline-tools.zip" | sha256sum -c -
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          unzip -q /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Tests
+        run: ./gradlew --no-daemon testDebugUnitTest
