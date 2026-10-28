@@ -319,7 +319,8 @@ class SettingsActivity : AppCompatActivity() {
                 else Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
             Intent(action, Uri.parse("package:$packageName"))
         }
-        addStatusRow(R.string.status_aod, Status.aodEnabled(this)) { Intent("android.settings.LOCK_SCREEN_SETTINGS") }
+        // The toggle's page moves between versions (Lock screen on 12, Display itself on 16+); Display covers both
+        addStatusRow(R.string.status_aod, Status.aodEnabled(this)) { Intent(Settings.ACTION_DISPLAY_SETTINGS) }
     }
 
     private fun addStatusRow(title: Int, ok: Boolean?, intent: () -> Intent) {
@@ -356,7 +357,6 @@ class SettingsActivity : AppCompatActivity() {
             // Fallbacks for settings pages that don't exist on this build
             val fallback = when (intent.action) {
                 Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS -> Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS
-                "android.settings.LOCK_SCREEN_SETTINGS" -> Settings.ACTION_DISPLAY_SETTINGS
                 else -> Settings.ACTION_SETTINGS
             }
             startActivity(Intent(fallback))
