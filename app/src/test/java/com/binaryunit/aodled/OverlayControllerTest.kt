@@ -113,6 +113,19 @@ class OverlayControllerTest {
         assertEquals("draw 21", draws().last())                           // cover-up offset + a shift every 3 min
     }
 
+    @Test fun `shift resumes after the light comes back`() {
+        host.light = Light.STILL; c.screen(false)
+        host.light = Light.OFF; c.refresh()
+        host.light = Light.STILL; c.refresh(); clock.advance(180_000)
+        assertEquals("draw 2", draws().last())
+    }
+
+    @Test fun `next cover cycle shifts after 3 minutes`() {
+        host.light = Light.STILL; c.screen(false); c.screen(true); clock.advance(LINGER_MS)
+        c.screen(false); clock.advance(180_000)                          // offset 2 at cover-up, then a shift
+        assertEquals("draw 3", draws().last())
+    }
+
     @Test fun `no shift while nothing is lit`() {
         host.light = Light.OFF; c.screen(false); clock.advance(600_000)
         assertEquals(listOf("draw 1"), draws())
