@@ -4,6 +4,7 @@ local.properties
 *.iml
 .idea/
 .superpowers/
+.kotlin/
 keystore.properties
 *.jks
 *.keystore
