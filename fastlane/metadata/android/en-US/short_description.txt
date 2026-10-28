@@ -1,0 +1,1 @@
+A notification LED for phones without one, drawn on the always-on display

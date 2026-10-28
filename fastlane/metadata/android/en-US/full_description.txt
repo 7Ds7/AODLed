@@ -1,0 +1,26 @@
+Miss the notification LED? AODLed draws a small light on the always-on display in the colour of your newest notification, over an otherwise black screen while the phone is locked.
+
+<b>Features</b>
+<ul>
+<li><b>Four styles:</b> a ring around the camera hole, a small dot, a glow along the screen edges, or the camera cutout's own outline.</li>
+<li><b>Animations:</b> off (a still light, kindest to the battery), a slow pulse, or motion: a swirl around the ring, a line tracing the cutout, a comet along the edges.</li>
+<li><b>Colours:</b> each app's own colour, taken from its notification or its icon, or one fixed colour, from the palette or your own.</li>
+<li><b>Light off:</b> when you dismiss the notification, or as soon as you unlock the phone. A new message brings it back.</li>
+<li><b>Only what matters:</b> ongoing, silent and Do Not Disturb-muted notifications don't light it.</li>
+<li><b>Private Space:</b> notifications from the Private Space light it in the right app colour.</li>
+<li><b>Place it yourself:</b> drag and pinch the light in a full-screen editor.</li>
+<li><b>Burn-in care:</b> the light moves by a few pixels each time the screen turns off.</li>
+</ul>
+
+<b>Permissions and why</b>
+<ul>
+<li><b>Notification access:</b> to know which apps have pending notifications and their colours. Notification text is never read or stored.</li>
+<li><b>Accessibility service:</b> lets AODLed draw over the always-on display. It doesn't read the screen.</li>
+<li><b>Battery unrestricted:</b> so Android doesn't stop the light while the phone sleeps.</li>
+<li><b>Always-on display:</b> must be turned on in the system settings.</li>
+</ul>
+No internet permission, no tracking.
+
+<b>Tested on</b> Pixel 10a with GrapheneOS (Android 17). Needs Android 12 or newer. Other phones may handle the always-on display differently; reports are welcome on the issue tracker.
+
+Heavily inspired by HoleyLight by Chainfire.
