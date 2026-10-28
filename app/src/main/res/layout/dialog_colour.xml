@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Custom fixed colour, previewed on black like the always-on display -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center_horizontal"
+        app:cardBackgroundColor="@android:color/black"
+        app:strokeWidth="0dp">
+
+        <ImageView
+            android:id="@+id/preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:padding="16dp"
+            android:src="@drawable/ic_ring" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Invisible rather than gone, so the sliders don't jump when it appears -->
+    <TextView
+        android:id="@+id/contrast_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:text="@string/colour_low_contrast"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorError"
+        android:visibility="invisible" />
+
+    <TextView
+        style="@style/AODLed.SettingLabel"
+        android:layout_marginStart="0dp"
+        android:text="@string/colour_hue" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/hue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:valueFrom="0"
+        android:valueTo="360"
+        app:labelBehavior="gone" />
+
+    <TextView
+        style="@style/AODLed.SettingLabel"
+        android:layout_marginStart="0dp"
+        android:text="@string/colour_saturation" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/saturation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:valueFrom="0"
+        android:valueTo="1"
+        app:labelBehavior="gone" />
+
+    <TextView
+        style="@style/AODLed.SettingLabel"
+        android:layout_marginStart="0dp"
+        android:text="@string/colour_brightness" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/brightness"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:valueFrom="0"
+        android:valueTo="1"
+        app:labelBehavior="gone" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="?attr/textInputOutlinedStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="@string/colour_hex"
+        app:helperText="@string/colour_hex_helper">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/hex"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:digits="#0123456789abcdefABCDEF"
+            android:inputType="textNoSuggestions|textCapCharacters"
+            android:maxLength="7"
+            android:maxLines="1"
+            android:typeface="monospace" />
+    </com.google.android.material.textfield.TextInputLayout>
+</LinearLayout>

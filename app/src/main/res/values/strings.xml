@@ -24,6 +24,14 @@
     <string name="off_dismiss">When dismissed</string>
     <string name="off_unlock">On unlock</string>
     <string name="adjust">Adjust position &amp; size</string>
+    <string name="colour_custom">Custom</string>
+    <string name="colour_custom_title">Custom colour</string>
+    <string name="colour_hue">Hue</string>
+    <string name="colour_saturation">Saturation</string>
+    <string name="colour_brightness">Brightness</string>
+    <string name="colour_hex">Hex</string>
+    <string name="colour_hex_helper">e.g. #FF8800</string>
+    <string name="colour_low_contrast">Hard to see on the always-on display</string>
     <string name="about">About</string>
     <string name="about_version">Version %1$s</string>
     <string name="close">Close</string>

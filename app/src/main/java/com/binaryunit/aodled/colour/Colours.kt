@@ -2,6 +2,8 @@ package com.binaryunit.aodled.colour
 
 import com.binaryunit.aodled.config.ColourMode
 import com.binaryunit.aodled.config.LightConfig
+import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 // Plain bit arithmetic on ARGB ints: android.graphics.Color is stubbed in JVM unit tests.
@@ -26,6 +28,7 @@ private const val NEAR_BLACK = 16
 private const val MIN_SPREAD = 40
 private const val HUE_BUCKETS = 12
 private const val MIN_SHARE = 0.05
+private const val MIN_CONTRAST_ON_BLACK = 3.0 // WCAG minimum for UI parts; a custom colour below it gets a warning
 
 private fun alpha(c: Int) = c ushr 24
 private fun red(c: Int) = (c shr 16) and 0xFF
@@ -75,6 +78,50 @@ fun appColour(notificationColour: Int, iconPixels: IntArray?): Int =
     ensureVisible(notificationColour)
         ?: iconPixels?.let(::dominantColour)?.let(::ensureVisible)
         ?: Palette.WHITE
+
+/** Custom fixed colour from [hue] (degrees), [saturation] and [brightness] (both 0 … 1). */
+fun pickedColour(hue: Float, saturation: Float, brightness: Float): Int {
+    val h = ((hue % 360f) + 360f) % 360f / 60f
+    val c = brightness * saturation
+    val x = c * (1 - abs(h % 2 - 1))
+    val (r, g, b) = when (h.toInt()) {
+        0 -> Triple(c, x, 0f)
+        1 -> Triple(x, c, 0f)
+        2 -> Triple(0f, c, x)
+        3 -> Triple(0f, x, c)
+        4 -> Triple(x, 0f, c)
+        else -> Triple(c, 0f, x)
+    }
+    val m = brightness - c
+    return rgb(((r + m) * 255).roundToInt(), ((g + m) * 255).roundToInt(), ((b + m) * 255).roundToInt())
+}
+
+/** Where the picker's sliders start for a saved colour. */
+fun hueSaturationBrightness(argb: Int): Triple<Float, Float, Float> {
+    val r = red(argb); val g = green(argb); val b = blue(argb)
+    val max = maxOf(r, g, b); val min = minOf(r, g, b)
+    if (max == min) return Triple(0f, 0f, max / 255f)
+    return Triple(hue(r, g, b, max, min), (max - min).toFloat() / max, max / 255f)
+}
+
+/** WCAG contrast against black at or above [MIN_CONTRAST_ON_BLACK]; below it the picker warns. */
+fun visibleOnBlack(argb: Int): Boolean {
+    fun linear(c: Int): Double {
+        val s = c / 255.0
+        return if (s <= 0.04045) s / 12.92 else ((s + 0.055) / 1.055).pow(2.4)
+    }
+    val luminance = 0.2126 * linear(red(argb)) + 0.7152 * linear(green(argb)) + 0.0722 * linear(blue(argb))
+    return (luminance + 0.05) / 0.05 >= MIN_CONTRAST_ON_BLACK
+}
+
+/** Opaque colour from "#RRGGBB" or "RRGGBB" (any case), or null until the text is a complete code. */
+fun parseHex(text: String): Int? {
+    val digits = text.trim().removePrefix("#")
+    if (digits.length != 6 || !digits.all { it in '0'..'9' || it.lowercaseChar() in 'a'..'f' }) return null
+    return (0xFF shl 24) or digits.toInt(16)
+}
+
+fun hexOf(argb: Int): String = "#%06X".format(argb and 0xFFFFFF)
 
 fun displayColour(appColour: Int, cfg: LightConfig): Int =
     if (cfg.colourMode == ColourMode.FIXED) cfg.fixedColour else appColour

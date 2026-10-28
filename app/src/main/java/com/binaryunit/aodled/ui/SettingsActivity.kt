@@ -13,6 +13,7 @@ import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -22,8 +23,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.core.widget.doAfterTextChanged
 import com.binaryunit.aodled.R
 import com.binaryunit.aodled.colour.Palette
+import com.binaryunit.aodled.colour.hexOf
+import com.binaryunit.aodled.colour.hueSaturationBrightness
+import com.binaryunit.aodled.colour.parseHex
+import com.binaryunit.aodled.colour.pickedColour
+import com.binaryunit.aodled.colour.visibleOnBlack
 import com.binaryunit.aodled.config.Animation
 import com.binaryunit.aodled.config.ColourMode
 import com.binaryunit.aodled.config.LightConfig
@@ -38,6 +45,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.slider.Slider
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
@@ -49,6 +57,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var cfg: LightConfig
     private lateinit var statusRows: LinearLayout
     private lateinit var palette: ChipGroup
+    private lateinit var customChip: Chip
     private lateinit var styleField: TextInputLayout
     private lateinit var styleMenu: MaterialAutoCompleteTextView
     private var cutout: Path? = null
@@ -190,10 +199,75 @@ class SettingsActivity : AppCompatActivity() {
                 isChipIconVisible = true
             })
         }
+        // Custom opens the picker on every tap; it's checked by syncControls once a custom colour is saved
+        customChip = Chip(this, null, com.google.android.material.R.attr.chipStyle).apply {
+            id = View.generateViewId()
+            text = getString(R.string.colour_custom)
+            isCheckable = true
+            chipIcon = getDrawable(R.drawable.ic_ring)
+            isChipIconVisible = true
+            setOnClickListener { showColourPicker() }
+        }
+        palette.addView(customChip)
         palette.setOnCheckedStateChangeListener { group, checkedIds ->
             if (binding || checkedIds.isEmpty()) return@setOnCheckedStateChangeListener
-            save(cfg.copy(fixedColour = group.findViewById<Chip>(checkedIds[0]).tag as Int))
+            val colour = group.findViewById<Chip>(checkedIds[0]).tag as? Int ?: return@setOnCheckedStateChangeListener
+            save(cfg.copy(fixedColour = colour))
         }
+    }
+
+    private fun showColourPicker() {
+        val view = layoutInflater.inflate(R.layout.dialog_colour, null)
+        val preview = view.findViewById<ImageView>(R.id.preview)
+        val warning = view.findViewById<View>(R.id.contrast_warning)
+        val hue = view.findViewById<Slider>(R.id.hue)
+        val saturation = view.findViewById<Slider>(R.id.saturation)
+        val brightness = view.findViewById<Slider>(R.id.brightness)
+        val hex = view.findViewById<EditText>(R.id.hex)
+        // The colour that OK saves: from the sliders, or exactly as typed in the hex field
+        var colour = cfg.fixedColour
+        // Sliders and hex field follow each other; syncing stops each from echoing back into the other
+        var syncing = false
+        fun show() {
+            preview.imageTintList = ColorStateList.valueOf(colour)
+            warning.visibility = if (visibleOnBlack(colour)) View.INVISIBLE else View.VISIBLE
+        }
+        fun setSliders() {
+            val (h, s, v) = hueSaturationBrightness(colour)
+            syncing = true
+            hue.value = h
+            saturation.value = s
+            brightness.value = v
+            syncing = false
+        }
+        fun setHex() {
+            syncing = true
+            hex.setText(hexOf(colour))
+            syncing = false
+        }
+        setSliders()
+        setHex()
+        show()
+        val fromSliders = Slider.OnChangeListener { _, _, _ ->
+            if (syncing) return@OnChangeListener
+            colour = pickedColour(hue.value, saturation.value, brightness.value)
+            setHex()
+            show()
+        }
+        listOf(hue, saturation, brightness).forEach { it.addOnChangeListener(fromSliders) }
+        hex.doAfterTextChanged { text ->
+            if (syncing) return@doAfterTextChanged
+            colour = parseHex(text.toString()) ?: return@doAfterTextChanged
+            setSliders()
+            show()
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.colour_custom_title)
+            .setView(view)
+            .setPositiveButton(android.R.string.ok) { _, _ -> save(cfg.copy(fixedColour = colour)) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setOnDismissListener { syncControls() } // a cancelled pick leaves the previous chip checked
+            .show()
     }
 
     private fun save(c: LightConfig) {
@@ -210,8 +284,13 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButtonToggleGroup>(R.id.colour_group).check(colourModes.getValue(cfg.colourMode))
         findViewById<MaterialButtonToggleGroup>(R.id.light_off_group).check(lightOffs.getValue(cfg.lightOff))
         palette.visibility = if (cfg.colourMode == ColourMode.FIXED) View.VISIBLE else View.GONE
-        (0 until palette.childCount).map { palette.getChildAt(it) as Chip }
-            .firstOrNull { it.tag == cfg.fixedColour }?.let { palette.check(it.id) }
+        val preset = (0 until palette.childCount).map { palette.getChildAt(it) as Chip }
+            .firstOrNull { it.tag == cfg.fixedColour }
+        palette.check((preset ?: customChip).id)
+        customChip.chipIconTint = ColorStateList.valueOf(
+            if (preset == null) cfg.fixedColour
+            else MaterialColors.getColor(customChip, com.google.android.material.R.attr.colorOnSurfaceVariant),
+        )
         binding = false
     }
 
