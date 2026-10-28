@@ -3,13 +3,18 @@
 A notification light for the Always-On Display: a ring, dot, edge or cutout outline in the colour of the newest
 pending notification, drawn over a black screen while the phone is locked.
 
+<p>
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="Settings screen" width="270">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" alt="Editor placing the light" width="270">
+</p>
+
 ## Features
 
 - **Four styles:** a ring around the camera hole, a small dot, a glow along the screen edges, or the camera
   cutout's own outline.
 - **Animations:** off (a still light, kindest to the battery), a slow pulse, or motion: a swirl around the ring,
   a line tracing the cutout, a comet along the edges.
-- **Colours:** each app's own colour, taken from its notification or its icon, or one fixed colour from a palette.
+- **Colours:** each app's own colour, taken from its notification or its icon, or one fixed colour, from the palette or your own.
 - **Light off:** when you dismiss the notification, or as soon as you unlock the phone. A new message brings it back.
 - **Only what matters:** ongoing, silent and Do Not Disturb-muted notifications don't light it.
 - **Private Space:** notifications from the Private Space light it in the right app colour.
@@ -19,6 +24,9 @@ pending notification, drawn over a black screen while the phone is locked.
 - **Status at a glance:** the settings screen shows which permission is missing and takes you to fix it.
 - **Private by design:** no internet permission, no tracking; notification text is never read or stored.
 
+AODLed is heavily inspired by [HoleyLight](https://github.com/Chainfire/HoleyLight) by Chainfire. HoleyLight was last
+updated about three years ago and has stopped working, so AODLed brings the same idea back.
+
 ## Tested on
 
 - Pixel 10a, GrapheneOS (Android 17)
@@ -26,8 +34,59 @@ pending notification, drawn over a black screen while the phone is locked.
 AODLed needs Android 12 or newer. It hasn't been tried on other phones yet; if you do, please open an issue with
 your phone, Android version and whether the light works.
 
-AODLed is heavily inspired by [HoleyLight](https://github.com/Chainfire/HoleyLight) by Chainfire. HoleyLight was last
-updated about three years ago and has stopped working, so AODLed brings the same idea back.
+## Install
+
+- **F-Droid:** once it's listed.
+- **Obtainium:** add this repository's URL. Obtainium installs the APK from each release and keeps it updated.
+- **By hand:** download `AODLed-<version>-release.apk` from the releases page and open it, or use
+  `adb install --user 0 AODLed-<version>-release.apk`.
+
+Every channel ships the same APK, signed with the same key, so you can switch between them without reinstalling.
+Signing certificate SHA-256: `9b:c1:75:87:5c:de:a6:72:a4:30:d5:69:ec:7b:f3:74:64:ed:4a:95:f2:28:03:eb:fb:69:88:96:bf:3c:18:c0`
+
+## Setup
+
+Open AODLed: the Status card lists what's still off, and tapping a row opens the right settings page.
+
+| Permission | Why |
+|---|---|
+| Notification access | To see which apps have pending notifications and their colours. Notification text is never read or stored. |
+| Accessibility service | Lets AODLed draw over the always-on display. It doesn't read the screen. |
+| Battery unrestricted | So Android doesn't stop the light while the phone sleeps. |
+| Always-on display | The system setting itself; without it the screen is simply off when locked. |
+| Notifications | Only for the test notification; asked the first time you tap Test (Android 13+). |
+
+If the Accessibility or Notification access toggle is greyed out, Android is restricting a sideloaded app: open
+App info → ⋮ → *Allow restricted settings*, then try again.
+
+## Building
+
+```
+./gradlew assembleDebug        # app/build/outputs/apk/debug/AODLed-<version>-debug.apk
+./gradlew testDebugUnitTest
+```
+
+Needs JDK 17 or newer and the Android SDK; releases are built with JDK 21. To sign releases, create
+`keystore.properties` in the repository root (git ignores it):
+
+```
+storeFile=/path/to/release.jks
+storePassword=…
+keyAlias=…
+keyPassword=…
+```
+
+Without it, `./gradlew assembleRelease` builds an unsigned APK, which is what F-Droid's build server does before
+checking it against the signed release.
+
+## Platform notes
+
+AODLed leans on a few things Android doesn't promise, worth re-checking after major Android or GrapheneOS updates:
+
+- A hidden wake lock level (`DRAW_WAKE_LOCK`) lets a frame reach the screen while it dozes. If a release removes
+  it, AODLed falls back to a plain CPU wake lock and the light may update less reliably.
+- The status card reads the `doze_always_on` setting; if it can't, the row shows Unknown.
+- `targetSdk` is 35. Raising it opts into newer Android behaviour, so test on a phone first.
 
 ## License
 
