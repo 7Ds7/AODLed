@@ -10,6 +10,17 @@ val appVersion = "0.1"
 val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }
     ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
 
+keystore?.let { p ->
+    val missing = listOf("storeFile", "storePassword", "keyAlias", "keyPassword").filter { p.getProperty(it).isNullOrBlank() }
+    if (missing.isNotEmpty()) throw GradleException("keystore.properties is missing ${missing.joinToString()}")
+    if (!file(p.getProperty("storeFile")).exists()) throw GradleException("keystore.properties: no file at storeFile")
+}
+
+// Unsigned is right for F-Droid's own build, but that APK isn't one to publish
+if (keystore == null) tasks.matching { it.name == "assembleRelease" }.configureEach {
+    doLast { logger.warn("Release APK is unsigned: no keystore.properties") }
+}
+
 android {
     namespace = "com.binaryunit.aodled"
     compileSdk = 35
