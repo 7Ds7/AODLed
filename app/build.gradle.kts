@@ -41,6 +41,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    // No Google-encrypted dependency list in the APK signing block: F-Droid flags it, and it's unreadable to anyone else
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 // APKs come out as AODLed-<version>-<debug|release>.apk
