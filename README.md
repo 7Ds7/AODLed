@@ -79,15 +79,6 @@ keyPassword=…
 Without it, `./gradlew assembleRelease` builds an unsigned APK, which is what F-Droid's build server does before
 checking it against the signed release.
 
-## Platform notes
-
-AODLed leans on a few things Android doesn't promise, worth re-checking after major Android or GrapheneOS updates:
-
-- A hidden wake lock level (`DRAW_WAKE_LOCK`) lets a frame reach the screen while it dozes. If a release removes
-  it, AODLed falls back to a plain CPU wake lock and the light may update less reliably.
-- The status card reads the `doze_always_on` setting; if it can't, the row shows Unknown.
-- `targetSdk` is 35. Raising it opts into newer Android behaviour, so test on a phone first.
-
 ## License
 
 Copyright (C) 2026 BinaryUnit
