@@ -27,6 +27,14 @@ pending notification, drawn over a black screen while the phone is locked.
 AODLed is heavily inspired by [HoleyLight](https://github.com/Chainfire/HoleyLight) by Chainfire. HoleyLight was last
 updated about three years ago and has stopped working, so AODLed brings the same idea back.
 
+## Scope
+
+Like HoleyLight, I'm building AODLed for myself: an always-on display that is completely black, with nothing on it
+but a notification light. It's deliberately bare, and I want to keep it that way.
+
+Pull requests are welcome, especially fixes and support for other phones. New features need a good reason to exist,
+so please open an issue to talk about one before you build it.
+
 ## Tested on
 
 - Pixel 10a, GrapheneOS (Android 17)
