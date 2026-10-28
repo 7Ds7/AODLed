@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the settings are backed up and transferred; anything stored later stays out unless listed here -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="aodled.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="aodled.xml" />
+    </device-transfer>
+</data-extraction-rules>
