@@ -32,10 +32,12 @@ import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.service.LightListenerService
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
@@ -74,12 +76,22 @@ class SettingsActivity : AppCompatActivity() {
             findViewById<View>(R.id.content).updatePadding(bottom = bars.bottom)
             insets
         }
+        findViewById<MaterialToolbar>(R.id.toolbar).apply {
+            inflateMenu(R.menu.settings)
+            setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.about -> showAbout()
+                    R.id.close -> finish() // only closes this screen; the light keeps running in its services
+                }
+                true
+            }
+        }
         prefs = Prefs(this)
         statusRows = findViewById(R.id.status_rows)
         palette = findViewById(R.id.palette)
 
         findViewById<View>(R.id.help_status).setOnClickListener { showHelp(it, R.string.help_status) }
-        findViewById<View>(R.id.help_light_off).setOnClickListener { showHelp(it, R.string.help_light_off) }
+        findViewById<View>(R.id.help_light_off).setOnClickListener { showHelp(it, R.string.help_light_off, above = true) }
         cutout = cutoutPath()
         buildStyleMenu()
         bindToggle(R.id.animation_group, animations) { cfg.copy(animation = it) }
@@ -116,12 +128,26 @@ class SettingsActivity : AppCompatActivity() {
         Snackbar.make(findViewById(R.id.root), R.string.test_sent, Snackbar.LENGTH_LONG).show()
     }
 
-    /** Small card next to a "?" icon; tapping anywhere else closes it. */
-    private fun showHelp(anchor: View, text: Int) {
+    private fun showAbout() {
+        val version = packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0)).versionName
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.app_name)
+            .setMessage(getString(R.string.about_version, version))
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    /** Small card next to a "?" icon, below it or [above] it; tapping anywhere else closes it. */
+    private fun showHelp(anchor: View, text: Int, above: Boolean = false) {
         val view = layoutInflater.inflate(R.layout.help_popup, null)
         view.findViewById<TextView>(R.id.text).text = getText(text)
-        PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
-            .showAsDropDown(anchor)
+        val popup = PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+        if (above) {
+            view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+            popup.showAsDropDown(anchor, 0, -(anchor.height + view.measuredHeight))
+        } else {
+            popup.showAsDropDown(anchor)
+        }
     }
 
     /** Style dropdown: each entry shows the style's shape; Cutout is greyed out without a camera cutout. */
