@@ -11,6 +11,7 @@ import android.graphics.Path
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -147,11 +148,13 @@ class SettingsActivity : AppCompatActivity() {
         } else {
             @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, 0).versionName
         }
-        MaterialAlertDialogBuilder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.app_name)
-            .setMessage(getString(R.string.about_version, version))
+            .setMessage(getString(R.string.about_version, version) + "\n\n" + getString(R.string.about_links))
             .setPositiveButton(android.R.string.ok, null)
             .show()
+        // Tapping a link opens the browser; the app itself has no internet permission
+        dialog.findViewById<TextView>(android.R.id.message)?.let { Linkify.addLinks(it, Linkify.WEB_URLS) }
     }
 
     /** Small card next to a "?" icon, below it or [above] it; tapping anywhere else closes it. */
