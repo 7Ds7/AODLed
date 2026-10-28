@@ -19,6 +19,13 @@ pending notification, drawn over a black screen while the phone is locked.
 - **Status at a glance:** the settings screen shows which permission is missing and takes you to fix it.
 - **Private by design:** no internet permission, no tracking; notification text is never read or stored.
 
+## Tested on
+
+- Pixel 10a, GrapheneOS (Android 17)
+
+AODLed needs Android 13 or newer. It hasn't been tried on other phones yet; if you do, please open an issue with
+your phone, Android version and whether the light works.
+
 AODLed is heavily inspired by [HoleyLight](https://github.com/Chainfire/HoleyLight) by Chainfire. HoleyLight was last
 updated about three years ago and has stopped working, so AODLed brings the same idea back.
 
