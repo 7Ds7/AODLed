@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.graphics.Path
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
@@ -110,7 +111,10 @@ class SettingsActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.adjust).setOnClickListener { startActivity(Intent(this, EditorActivity::class.java)) }
         findViewById<View>(R.id.test).setOnClickListener {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            // Android 12 has no notification permission: notifications are allowed by default
+            if (Build.VERSION.SDK_INT < 33 ||
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            ) {
                 postTest()
             } else {
                 notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -138,7 +142,11 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun showAbout() {
-        val version = packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0)).versionName
+        val version = if (Build.VERSION.SDK_INT >= 33) {
+            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0)).versionName
+        } else {
+            @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, 0).versionName
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.app_name)
             .setMessage(getString(R.string.about_version, version))

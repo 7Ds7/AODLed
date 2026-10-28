@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId = "com.binaryunit.aodled"
-        minSdk = 33
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = appVersion

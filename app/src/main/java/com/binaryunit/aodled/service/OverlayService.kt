@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -119,7 +120,9 @@ class OverlayService : AccessibilityService() {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_USER_PRESENT)
         }
-        registerReceiver(screenReceiver, filter, RECEIVER_NOT_EXPORTED) // system broadcasts still arrive
+        // System broadcasts still arrive; Android 12 has no flag, and only the system can send these anyway
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenReceiver, filter, RECEIVER_NOT_EXPORTED)
+        else registerReceiver(screenReceiver, filter)
         AppState.addListener(onStateChanged)
         prefs.onChange(onPrefsChanged)
         evaluate()

@@ -23,7 +23,7 @@ pending notification, drawn over a black screen while the phone is locked.
 
 - Pixel 10a, GrapheneOS (Android 17)
 
-AODLed needs Android 13 or newer. It hasn't been tried on other phones yet; if you do, please open an issue with
+AODLed needs Android 12 or newer. It hasn't been tried on other phones yet; if you do, please open an issue with
 your phone, Android version and whether the light works.
 
 AODLed is heavily inspired by [HoleyLight](https://github.com/Chainfire/HoleyLight) by Chainfire. HoleyLight was last
