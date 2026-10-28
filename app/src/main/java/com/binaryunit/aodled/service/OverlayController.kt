@@ -33,6 +33,7 @@ class OverlayController(
 
     private var covered = false
     private var offset = Offset(0, 0)
+    private var shiftArmed = false
 
     private val hide = Runnable {
         stopLoops()
@@ -42,6 +43,7 @@ class OverlayController(
 
     private val burnIn = object : Runnable {
         override fun run() {
+            shiftArmed = false
             offset = nextOffset()
             refresh()
         }
@@ -73,11 +75,17 @@ class OverlayController(
     fun refresh() {
         if (!covered) return
         val light = host.draw(offset)
-        stopLoops()
-        if (light != Light.OFF) {
-            scheduler.post(burnIn, BurnIn.INTERVAL_MS)
-            if (light == Light.ANIMATED) scheduler.post(frame, 0)
+        scheduler.cancel(frame)
+        if (light == Light.OFF) {
+            stopLoops()
+            return
         }
+        // A running shift timer is left alone: refreshing must not postpone the next shift
+        if (!shiftArmed) {
+            scheduler.post(burnIn, BurnIn.INTERVAL_MS)
+            shiftArmed = true
+        }
+        if (light == Light.ANIMATED) scheduler.post(frame, 0)
     }
 
     fun stop() {
@@ -87,6 +95,7 @@ class OverlayController(
 
     private fun stopLoops() {
         scheduler.cancel(burnIn)
+        shiftArmed = false
         scheduler.cancel(frame)
     }
 }

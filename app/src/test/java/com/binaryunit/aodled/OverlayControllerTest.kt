@@ -107,6 +107,12 @@ class OverlayControllerTest {
         assertEquals("draw 2", draws().last())
     }
 
+    @Test fun `refreshes don't postpone the shift`() {
+        host.light = Light.STILL; c.screen(false)
+        repeat(30) { clock.advance(120_000); c.refresh() }                // one hour, a refresh every 2 min
+        assertEquals("draw 21", draws().last())                           // cover-up offset + a shift every 3 min
+    }
+
     @Test fun `no shift while nothing is lit`() {
         host.light = Light.OFF; c.screen(false); clock.advance(600_000)
         assertEquals(listOf("draw 1"), draws())
