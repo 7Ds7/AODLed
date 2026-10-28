@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 val appVersion = "0.1"
@@ -47,12 +46,6 @@ android {
 // APKs come out as AODLed-<version>-<debug|release>.apk
 base {
     archivesName.set("AODLed-$appVersion")
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-    }
 }
 
 dependencies {
