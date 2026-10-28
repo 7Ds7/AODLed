@@ -36,7 +36,6 @@ import kotlin.random.Random
 
 /** Doze spike (2026-10-23): a once-drawn frame held for 10 min unplugged, so no keep-alive redraw. */
 const val KEEP_ALIVE_MS = 0L
-const val LINGER_MS = 100L
 
 /**
  * Owns the full-screen overlay that covers the AOD with black and draws the light. The cover is up exactly while
