@@ -10,10 +10,15 @@ private const val UNIMPORTANT_FOR_LOGGING = 0x40000000
 class DozeWake(context: Context) {
     private val pm = context.getSystemService(PowerManager::class.java)
     private val cpu = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "aodled:cpu").apply { setReferenceCounted(false) }
-    private val draw = pm.newWakeLock(DRAW_WAKE_LOCK or UNIMPORTANT_FOR_LOGGING, "aodled:draw").apply { setReferenceCounted(false) }
+    // A release that drops the hidden level makes newWakeLock throw: carry on with the CPU lock rather than crash
+    private val draw = try {
+        pm.newWakeLock(DRAW_WAKE_LOCK or UNIMPORTANT_FOR_LOGGING, "aodled:draw").apply { setReferenceCounted(false) }
+    } catch (e: IllegalArgumentException) {
+        null
+    }
 
     fun poke(ms: Long = 250) {
         cpu.acquire(ms)
-        draw.acquire(ms)
+        draw?.acquire(ms)
     }
 }
