@@ -3,6 +3,25 @@
 A notification light for the Always-On Display: a ring, dot, edge or cutout outline in the colour of the newest
 pending notification, drawn over a black screen while the phone is locked.
 
+## Features
+
+- **Four styles:** a ring around the camera hole, a small dot, a glow along the screen edges, or the camera
+  cutout's own outline.
+- **Animations:** off (a still light, kindest to the battery), a slow pulse, or motion: a swirl around the ring,
+  a line tracing the cutout, a comet along the edges.
+- **Colours:** each app's own colour, taken from its notification or its icon, or one fixed colour from a palette.
+- **Light off:** when you dismiss the notification, or as soon as you unlock the phone. A new message brings it back.
+- **Only what matters:** ongoing, silent and Do Not Disturb-muted notifications don't light it.
+- **Private Space:** notifications from the Private Space light it in the right app colour.
+- **Place it yourself:** drag and pinch the light in a full-screen editor that uses the same drawing code as the
+  always-on display.
+- **Burn-in care:** the light moves by a few pixels each time the screen turns off.
+- **Status at a glance:** the settings screen shows which permission is missing and takes you to fix it.
+- **Private by design:** no internet permission, no tracking; notification text is never read or stored.
+
+AODLed is heavily inspired by [HoleyLight](https://github.com/Chainfire/HoleyLight) by Chainfire. HoleyLight was last
+updated about three years ago and has stopped working, so AODLed brings the same idea back.
+
 ## License
 
 Copyright (C) 2026 BinaryUnit
