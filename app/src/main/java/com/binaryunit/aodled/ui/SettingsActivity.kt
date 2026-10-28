@@ -306,7 +306,10 @@ class SettingsActivity : AppCompatActivity() {
             Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
         }
         addStatusRow(R.string.status_battery, Status.batteryUnrestricted(this)) {
-            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+            // The request dialog closes at once when we're already unrestricted, so show App info instead
+            val action = if (Status.batteryUnrestricted(this)) Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                else Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+            Intent(action, Uri.parse("package:$packageName"))
         }
         addStatusRow(R.string.status_aod, Status.aodEnabled(this)) { Intent("android.settings.LOCK_SCREEN_SETTINGS") }
     }
