@@ -119,7 +119,7 @@ class OverlayService : AccessibilityService() {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_USER_PRESENT)
         }
-        registerReceiver(screenReceiver, filter, RECEIVER_EXPORTED)
+        registerReceiver(screenReceiver, filter, RECEIVER_NOT_EXPORTED) // system broadcasts still arrive
         AppState.addListener(onStateChanged)
         prefs.onChange(onPrefsChanged)
         evaluate()
