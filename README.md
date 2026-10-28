@@ -45,7 +45,8 @@ your phone, Android version and whether the light works.
 ## Install
 
 - **F-Droid:** once it's listed.
-- **Obtainium:** add this repository's URL. Obtainium installs the APK from each release and keeps it updated.
+- **Obtainium:** add `https://github.com/7Ds7/AODLed`. Obtainium installs the APK from each release and keeps it
+  updated.
 - **By hand:** download `AODLed-<version>-release.apk` from the releases page and open it, or use
   `adb install --user 0 AODLed-<version>-release.apk`.
 
