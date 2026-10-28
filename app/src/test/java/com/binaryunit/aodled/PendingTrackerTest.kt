@@ -5,7 +5,9 @@ import com.binaryunit.aodled.config.LightOff.ON_UNLOCK
 import com.binaryunit.aodled.notify.NotifInfo
 import com.binaryunit.aodled.notify.PendingTracker
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PendingTrackerTest {
@@ -60,5 +62,51 @@ class PendingTrackerTest {
     @Test fun `reset adds unknown keys as new`() {
         t.markSeen(10); t.reset(listOf(n("a", 12, 12, red)))
         assertEquals("a", t.current(ON_UNLOCK)?.key)
+    }
+
+    // The return value says whether the light changed, so unrelated notification traffic doesn't refresh it
+
+    @Test fun `first notification changes the light`() {
+        assertTrue(t.posted(n("a", 1, 1, red)))
+    }
+
+    @Test fun `removing a key that never qualified changes nothing`() {
+        t.posted(n("a", 1, 1, red))
+        assertFalse(t.removed("music"))
+    }
+
+    @Test fun `silent repost changes nothing`() {
+        t.posted(n("a", 1, 1, red))
+        assertFalse(t.posted(n("a", 2, 1, red)))
+    }
+
+    @Test fun `newer notification in the same colour changes nothing`() {
+        t.posted(n("a", 1, 1, red))
+        assertFalse(t.posted(n("b", 2, 2, red)))
+    }
+
+    @Test fun `newer notification in another colour changes the light`() {
+        t.posted(n("a", 1, 1, red))
+        assertTrue(t.posted(n("b", 2, 2, green)))
+    }
+
+    @Test fun `same colour after unlock changes the light`() {
+        t.posted(n("a", 1, 1, red)); t.markSeen(10)
+        assertTrue(t.posted(n("b", 11, 11, red)))           // ON_UNLOCK goes from off to red
+    }
+
+    @Test fun `removing the shown notification changes the light`() {
+        t.posted(n("a", 1, 1, red)); t.posted(n("b", 2, 2, green))
+        assertTrue(t.removed("b"))
+    }
+
+    @Test fun `reset with the same notifications changes nothing`() {
+        t.posted(n("a", 1, 1, red))
+        assertFalse(t.reset(listOf(n("a", 5, 1, red))))
+    }
+
+    @Test fun `reset that drops the shown notification changes the light`() {
+        t.posted(n("a", 1, 1, red))
+        assertTrue(t.reset(emptyList()))
     }
 }

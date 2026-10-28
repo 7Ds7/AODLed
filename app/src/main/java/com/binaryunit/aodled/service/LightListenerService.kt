@@ -29,24 +29,23 @@ class LightListenerService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification, rankingMap: RankingMap) {
         val info = toInfo(sbn, rankingMap)
-        if (info != null) AppState.tracker.posted(info) else AppState.tracker.removed(sbn.key)
-        AppState.changed()
+        // Most traffic (progress bars, media, silent reposts) leaves the light as it is: don't wake the overlay
+        val changed = if (info != null) AppState.tracker.posted(info) else AppState.tracker.removed(sbn.key)
+        if (changed) AppState.changed()
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification, rankingMap: RankingMap) {
-        AppState.tracker.removed(sbn.key)
-        AppState.changed()
+        if (AppState.tracker.removed(sbn.key)) AppState.changed()
     }
 
     override fun onNotificationRankingUpdate(rankingMap: RankingMap) {
-        rebuild(rankingMap)
-        AppState.changed()
+        if (rebuild(rankingMap)) AppState.changed()
     }
 
-    private fun rebuild(rankingMap: RankingMap?) {
+    private fun rebuild(rankingMap: RankingMap?): Boolean {
         // Throws if called while unbound; the next connect rebuilds anyway
-        val active = try { activeNotifications } catch (e: SecurityException) { null } ?: return
-        AppState.tracker.reset(active.mapNotNull { toInfo(it, rankingMap) })
+        val active = try { activeNotifications } catch (e: SecurityException) { null } ?: return false
+        return AppState.tracker.reset(active.mapNotNull { toInfo(it, rankingMap) })
     }
 
     private fun toInfo(sbn: StatusBarNotification, rankingMap: RankingMap?): NotifInfo? {
