@@ -202,6 +202,54 @@
                 android:text="@string/off_unlock" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/AODLed.SettingLabel"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="0dp"
+                android:text="@string/setting_respect_dnd" />
+            <ImageButton
+                android:id="@+id/help_respect_dnd"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/actionBarItemBackground"
+                android:contentDescription="@string/help"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_help"
+                app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/dnd_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <Button
+                android:id="@+id/dnd_respect"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/dnd_respect" />
+
+            <Button
+                android:id="@+id/dnd_ignore"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/dnd_ignore" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
         <Button
             android:id="@+id/adjust"
             style="@style/Widget.Material3.Button.TonalButton"

@@ -26,6 +26,7 @@ class Prefs(context: Context) {
                 prefs.getFloat(KEY_CUTOUT_CX, 0f), prefs.getFloat(KEY_CUTOUT_CY, 0f), prefs.getFloat(KEY_CUTOUT_SCALE, 1f)
             ) else null,
             edgeThickness = prefs.getFloat(KEY_EDGE, d.edgeThickness),
+            respectDnd = prefs.getBoolean(KEY_RESPECT_DND, d.respectDnd),
         )
     }
 
@@ -52,6 +53,7 @@ class Prefs(context: Context) {
                 remove(KEY_CUTOUT_CX); remove(KEY_CUTOUT_CY); remove(KEY_CUTOUT_SCALE)
             }
             putFloat(KEY_EDGE, c.edgeThickness)
+            putBoolean(KEY_RESPECT_DND, c.respectDnd)
         }.apply()
     }
 
@@ -84,5 +86,6 @@ class Prefs(context: Context) {
         const val KEY_CUTOUT_CY = "cutout_cy"
         const val KEY_CUTOUT_SCALE = "cutout_scale"
         const val KEY_EDGE = "edge_thickness"
+        const val KEY_RESPECT_DND = "respect_dnd"
     }
 }

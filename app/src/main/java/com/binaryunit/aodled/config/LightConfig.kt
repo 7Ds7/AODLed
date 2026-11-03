@@ -22,4 +22,5 @@ data class LightConfig(
     val dot: DotPlacement? = null,
     val cutout: CutoutPlacement? = null,
     val edgeThickness: Float = EDGE_DEFAULT,
+    val respectDnd: Boolean = true,
 )

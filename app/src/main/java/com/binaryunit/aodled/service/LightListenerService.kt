@@ -4,16 +4,36 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.notify.NotifInfo
 import com.binaryunit.aodled.notify.qualifies
 
 /** Feeds qualifying notifications (Owner + Private Space + forwarded) into [AppState.tracker]. */
 class LightListenerService : NotificationListenerService() {
     private lateinit var colours: ColourResolver
+    private lateinit var prefs: Prefs
+    private var respectDnd = true
+
+    // Notifications already showing light up or go dark as soon as the setting flips
+    private val onPrefsChanged: () -> Unit = {
+        val now = prefs.load().respectDnd
+        if (now != respectDnd) {
+            respectDnd = now
+            if (rebuild(currentRanking)) AppState.changed()
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
         colours = ColourResolver(this)
+        prefs = Prefs(this)
+        respectDnd = prefs.load().respectDnd
+        prefs.onChange(onPrefsChanged)
+    }
+
+    override fun onDestroy() {
+        prefs.removeOnChange(onPrefsChanged)
+        super.onDestroy()
     }
 
     override fun onListenerConnected() {
@@ -53,8 +73,9 @@ class LightListenerService : NotificationListenerService() {
         val ranking = Ranking()
         val ranked = rankingMap?.getRanking(sbn.key, ranking) == true
         val importance = if (ranked) ranking.importance else NotificationManager.IMPORTANCE_DEFAULT
-        val intercepted = ranked && (ranking.isSuspended || !ranking.matchesInterruptionFilter())
-        if (!qualifies(n.flags, importance, intercepted, sbn.packageName, n.channelId ?: "", packageName)) return null
+        val suspended = ranked && ranking.isSuspended
+        val dndBlocked = ranked && !ranking.matchesInterruptionFilter()
+        if (!qualifies(n.flags, importance, suspended, dndBlocked, respectDnd, sbn.packageName, n.channelId ?: "", packageName)) return null
         return NotifInfo(sbn.key, sbn.postTime, n.`when`, colours.colourFor(sbn))
     }
 }

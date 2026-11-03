@@ -16,19 +16,37 @@ import org.junit.Test
 class QualifyTest {
     private val own = "com.binaryunit.aodled"
 
-    @Test fun `normal default-importance notification qualifies`() =
-        assertTrue(qualifies(0, IMPORTANCE_DEFAULT, false, "com.whatsapp", "msg", own))
+    private fun q(
+        flags: Int = 0, importance: Int = IMPORTANCE_DEFAULT, suspended: Boolean = false, dndBlocked: Boolean = false,
+        respectDnd: Boolean = true, pkg: String = "com.whatsapp", channelId: String = "msg",
+    ) = qualifies(flags, importance, suspended, dndBlocked, respectDnd, pkg, channelId, own)
+
+    @Test fun `normal default-importance notification qualifies`() = assertTrue(q())
 
     @Test fun `ongoing, no-clear, fgs, summary excluded`() =
         listOf(FLAG_ONGOING_EVENT, FLAG_NO_CLEAR, FLAG_FOREGROUND_SERVICE, FLAG_GROUP_SUMMARY)
-            .forEach { assertFalse(qualifies(it, IMPORTANCE_HIGH, false, "p", "c", own)) }
+            .forEach { assertFalse(q(flags = it, importance = IMPORTANCE_HIGH)) }
 
-    @Test fun `silent excluded`() = assertFalse(qualifies(0, IMPORTANCE_LOW, false, "p", "c", own))
+    @Test fun `silent excluded`() = assertFalse(q(importance = IMPORTANCE_LOW))
 
-    @Test fun `dnd intercepted excluded`() = assertFalse(qualifies(0, IMPORTANCE_HIGH, true, "p", "c", own))
+    @Test fun `dnd blocked excluded when respecting dnd`() = assertFalse(q(importance = IMPORTANCE_HIGH, dndBlocked = true))
+
+    @Test fun `dnd blocked lights when not respecting dnd`() = assertTrue(q(dndBlocked = true, respectDnd = false))
+
+    @Test fun `silent still excluded when not respecting dnd`() =
+        assertFalse(q(importance = IMPORTANCE_LOW, dndBlocked = true, respectDnd = false))
+
+    @Test fun `suspended excluded either way`() {
+        assertFalse(q(suspended = true))
+        assertFalse(q(suspended = true, respectDnd = false))
+    }
+
+    @Test fun `test notification ignores dnd`() =
+        assertTrue(q(dndBlocked = true, pkg = own, channelId = TEST_CHANNEL_ID))
 
     @Test fun `own notifications only on test channel`() {
-        assertTrue(qualifies(0, IMPORTANCE_DEFAULT, false, own, TEST_CHANNEL_ID, own))
-        assertFalse(qualifies(0, IMPORTANCE_DEFAULT, false, own, "other", own))
+        assertTrue(q(pkg = own, channelId = TEST_CHANNEL_ID))
+        assertFalse(q(pkg = own, channelId = "other"))
+        assertFalse(q(pkg = own, channelId = "other", dndBlocked = true, respectDnd = false))
     }
 }

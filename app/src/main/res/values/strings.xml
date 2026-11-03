@@ -23,6 +23,9 @@
     <string name="setting_light_off">Light off</string>
     <string name="off_dismiss">When dismissed</string>
     <string name="off_unlock">On unlock</string>
+    <string name="setting_respect_dnd">Do Not Disturb</string>
+    <string name="dnd_respect">Respect</string>
+    <string name="dnd_ignore">Ignore</string>
     <string name="adjust">Adjust position &amp; size</string>
     <string name="colour_custom">Custom</string>
     <string name="colour_custom_title">Custom colour</string>
@@ -41,6 +44,7 @@
     <string name="help">Help</string>
     <string name="help_status">AODLed needs all of these turned on to work. Tap any that\'s off to fix it.</string>
     <string name="help_light_off"><b>When dismissed:</b> the light stays on until you clear the notification.\n\n<b>On unlock:</b> the light goes off as soon as you unlock the phone, even if the notification is still there. It comes back with the next new notification.</string>
+    <string name="help_respect_dnd"><b>Respect:</b> only notifications that Do Not Disturb lets through turn the light on.\n\n<b>Ignore:</b> the light also comes on for notifications Do Not Disturb silences.\n\nThe test notification always turns it on.</string>
     <string name="status_listener">Notification access</string>
     <string name="status_accessibility">Accessibility service</string>
     <string name="status_battery">Battery unrestricted</string>

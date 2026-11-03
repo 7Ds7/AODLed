@@ -72,6 +72,7 @@ class SettingsActivity : AppCompatActivity() {
     private val animations = mapOf(Animation.OFF to R.id.anim_off, Animation.PULSE to R.id.anim_pulse, Animation.MOTION to R.id.anim_motion)
     private val colourModes = mapOf(ColourMode.APP to R.id.colour_app, ColourMode.FIXED to R.id.colour_fixed)
     private val lightOffs = mapOf(LightOff.ON_DISMISS to R.id.off_dismiss, LightOff.ON_UNLOCK to R.id.off_unlock)
+    private val dndModes = mapOf(true to R.id.dnd_respect, false to R.id.dnd_ignore)
 
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) postTest()
@@ -103,11 +104,13 @@ class SettingsActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.help_status).setOnClickListener { showHelp(it, R.string.help_status) }
         findViewById<View>(R.id.help_light_off).setOnClickListener { showHelp(it, R.string.help_light_off, above = true) }
+        findViewById<View>(R.id.help_respect_dnd).setOnClickListener { showHelp(it, R.string.help_respect_dnd, above = true) }
         cutout = cutoutPath()
         buildStyleMenu()
         bindToggle(R.id.animation_group, animations) { cfg.copy(animation = it) }
         bindToggle(R.id.colour_group, colourModes) { cfg.copy(colourMode = it) }
         bindToggle(R.id.light_off_group, lightOffs) { cfg.copy(lightOff = it) }
+        bindToggle(R.id.dnd_group, dndModes) { cfg.copy(respectDnd = it) }
         buildPalette()
 
         findViewById<View>(R.id.adjust).setOnClickListener { startActivity(Intent(this, EditorActivity::class.java)) }
@@ -294,6 +297,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButtonToggleGroup>(R.id.animation_group).check(animations.getValue(cfg.animation))
         findViewById<MaterialButtonToggleGroup>(R.id.colour_group).check(colourModes.getValue(cfg.colourMode))
         findViewById<MaterialButtonToggleGroup>(R.id.light_off_group).check(lightOffs.getValue(cfg.lightOff))
+        findViewById<MaterialButtonToggleGroup>(R.id.dnd_group).check(dndModes.getValue(cfg.respectDnd))
         palette.visibility = if (cfg.colourMode == ColourMode.FIXED) View.VISIBLE else View.GONE
         val preset = (0 until palette.childCount).map { palette.getChildAt(it) as Chip }
             .firstOrNull { it.tag == cfg.fixedColour }
