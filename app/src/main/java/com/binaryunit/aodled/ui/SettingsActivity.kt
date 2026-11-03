@@ -18,7 +18,6 @@ import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -158,19 +157,6 @@ class SettingsActivity : AppCompatActivity() {
             .show()
         // Tapping a link opens the browser; the app itself has no internet permission
         dialog.findViewById<TextView>(android.R.id.message)?.let { Linkify.addLinks(it, Linkify.WEB_URLS) }
-    }
-
-    /** Small card next to a "?" icon, below it or [above] it; tapping anywhere else closes it. */
-    private fun showHelp(anchor: View, text: Int, above: Boolean = false) {
-        val view = layoutInflater.inflate(R.layout.help_popup, null)
-        view.findViewById<TextView>(R.id.text).text = getText(text)
-        val popup = PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
-        if (above) {
-            view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-            popup.showAsDropDown(anchor, 0, -(anchor.height + view.measuredHeight))
-        } else {
-            popup.showAsDropDown(anchor)
-        }
     }
 
     /** Style dropdown: each entry shows the style's shape; Cutout is greyed out without a camera cutout. */

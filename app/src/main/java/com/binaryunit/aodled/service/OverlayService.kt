@@ -17,12 +17,14 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import com.binaryunit.aodled.colour.displayColour
 import com.binaryunit.aodled.config.Animation
+import com.binaryunit.aodled.config.BurnIn
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
 import com.binaryunit.aodled.config.defaultRing
+import com.binaryunit.aodled.config.placementDiffers
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
 import com.binaryunit.aodled.render.box
@@ -30,7 +32,9 @@ import com.binaryunit.aodled.render.contourHalfSize
 import com.binaryunit.aodled.render.cornerRadius
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
+import com.binaryunit.aodled.render.lineThickness
 import com.binaryunit.aodled.render.screenGeometry
+import kotlin.random.Random
 
 /**
  * Owns the full-screen overlay that covers the AOD with black and draws the light; [OverlayController] decides
@@ -73,7 +77,9 @@ class OverlayService : AccessibilityService() {
 
     private val onStateChanged: () -> Unit = { controller.refresh() }
     private val onPrefsChanged: () -> Unit = {
+        val old = cfg
         cfg = prefs.load()
+        if (cfg.placementDiffers(old)) controller.placementChanged()
         controller.refresh()
     }
 
@@ -112,7 +118,9 @@ class OverlayService : AccessibilityService() {
         pm = getSystemService(PowerManager::class.java)
         prefs = Prefs(this)
         wake = DozeWake(this)
-        controller = OverlayController(host, scheduler)
+        controller = OverlayController(host, scheduler) {
+            BurnIn.next(Random, BurnIn.shift(state(Offset(0, 0), null).lineThickness()))
+        }
         cfg = prefs.load()
         dm.registerDisplayListener(displayListener, handler)
         val filter = IntentFilter().apply {
@@ -168,10 +176,22 @@ class OverlayService : AccessibilityService() {
     /** Recomputes what to draw at [offset] and hands it to the view. */
     private fun draw(offset: Offset): Light {
         val v = view ?: return Light.OFF
+        val colour = AppState.tracker.current(cfg.lightOff)?.let { displayColour(it.colour, cfg) }
+        val state = state(offset, colour)
+        wake.poke()
+        v.state = state
+        return when {
+            colour == null -> Light.OFF
+            effectiveAnimation(cfg.style, cfg.animation) != Animation.OFF -> Light.ANIMATED
+            else -> Light.STILL
+        }
+    }
+
+    /** The saved config on this screen, with placements left at default derived from the cutout. */
+    private fun state(offset: Offset, colour: Int?): LightState {
         val (width, _, cutout) = screenGeometry()
         val path = cutoutPath()
-        val colour = AppState.tracker.current(cfg.lightOff)?.let { displayColour(it.colour, cfg) }
-        val state = LightState(
+        return LightState(
             cfg = cfg,
             ring = cfg.ring ?: defaultRing(cutout, width),
             dot = cfg.dot ?: defaultDot(cutout, width),
@@ -182,12 +202,5 @@ class OverlayService : AccessibilityService() {
             cutout = cfg.cutout ?: path?.let { defaultCutout(it.box(), it.contourHalfSize()) },
             cutoutPath = path,
         )
-        wake.poke()
-        v.state = state
-        return when {
-            colour == null -> Light.OFF
-            effectiveAnimation(cfg.style, cfg.animation) != Animation.OFF -> Light.ANIMATED
-            else -> Light.STILL
-        }
     }
 }

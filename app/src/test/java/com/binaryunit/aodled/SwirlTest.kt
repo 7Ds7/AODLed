@@ -46,4 +46,7 @@ class SwirlTest {
         assertEquals(ringThickness(50f), swirlStroke(50f, 150), 0.001f)
         assertEquals(0f, swirlStroke(50f, 0), 0.001f)
     }
+
+    @Test fun `swirl peaks at the scaled ring thickness`() =
+        assertEquals(ringThickness(50f, 2f), swirlStroke(50f, 150, 2f), 0.001f)
 }

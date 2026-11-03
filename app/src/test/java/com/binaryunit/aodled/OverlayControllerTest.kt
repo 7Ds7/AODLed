@@ -100,6 +100,32 @@ class OverlayControllerTest {
         assertEquals(before, frames())
     }
 
+    @Test fun `first light after a placement change is exact, then shifts`() {
+        c.placementChanged(); host.light = Light.STILL; c.screen(false)
+        assertEquals("draw 0", draws().last())
+        clock.advance(180_000)
+        assertEquals("draw 1", draws().last())
+    }
+
+    @Test fun `exact show is used once`() {
+        c.placementChanged(); host.light = Light.STILL; c.screen(false)
+        c.screen(true); clock.advance(LINGER_MS); c.screen(false)
+        assertEquals("draw 1", draws().last())
+    }
+
+    @Test fun `a lock with nothing lit doesn't use up the exact show`() {
+        c.placementChanged(); host.light = Light.OFF; c.screen(false)
+        c.screen(true); clock.advance(LINGER_MS)
+        host.light = Light.STILL; c.screen(false)
+        assertEquals("draw 0", draws().last())
+    }
+
+    @Test fun `light arriving later in the lock is still exact`() {
+        c.placementChanged(); host.light = Light.OFF; c.screen(false)
+        host.light = Light.STILL; c.refresh()
+        assertEquals("draw 0", draws().last())
+    }
+
     @Test fun `untouched light shifts after 3 minutes`() {
         host.light = Light.STILL; c.screen(false); clock.advance(179_999)
         assertEquals("draw 1", draws().last())

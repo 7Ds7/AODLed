@@ -3,7 +3,6 @@ package com.binaryunit.aodled.service
 import com.binaryunit.aodled.config.BurnIn
 import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.render.ANIM_FPS
-import kotlin.random.Random
 
 const val LINGER_MS = 100L
 
@@ -22,7 +21,7 @@ enum class Light { OFF, STILL, ANIMATED }
 class OverlayController(
     private val host: Host,
     private val scheduler: Scheduler,
-    private val nextOffset: () -> Offset = { BurnIn.next(Random) },
+    private val nextOffset: () -> Offset,
 ) {
     interface Host {
         fun coverUp()
@@ -34,6 +33,7 @@ class OverlayController(
     private var covered = false
     private var offset = Offset(0, 0)
     private var shiftArmed = false
+    private var exactNext = false
 
     private val hide = Runnable {
         stopLoops()
@@ -65,7 +65,7 @@ class OverlayController(
             if (!covered) {
                 host.coverUp()
                 covered = true
-                offset = nextOffset()
+                offset = if (exactNext) Offset(0, 0) else nextOffset()
             }
             refresh()
         }
@@ -80,12 +80,18 @@ class OverlayController(
             stopLoops()
             return
         }
+        exactNext = false
         // A running shift timer is left alone: refreshing must not postpone the next shift
         if (!shiftArmed) {
             scheduler.post(burnIn, BurnIn.INTERVAL_MS)
             shiftArmed = true
         }
         if (light == Light.ANIMATED) scheduler.post(frame, 0)
+    }
+
+    /** The light's next showing is exactly where it was placed, so a new placement can be checked; shifts resume after. */
+    fun placementChanged() {
+        exactNext = true
     }
 
     fun stop() {

@@ -9,6 +9,8 @@
     <string name="reset">Reset</string>
     <string name="editor_hint">Drag to move · pinch to resize</string>
     <string name="editor_hint_edges">Pinch to change thickness</string>
+    <string name="thickness">Thickness</string>
+    <string name="help_burn_in">To protect the screen from burn-in, the light moves a little every 3 minutes while it\'s on, so the same pixels aren\'t lit for hours.\n\n<b>Ring</b> and <b>Cutout</b> grow or shrink slightly around their centre.\n<b>Dot</b> shifts a few pixels.\n<b>Edges</b> move slightly inward.\n\nThe thicker the line, the bigger the change. The first time the light comes on after you save, it\'s exactly where you placed it.</string>
     <string name="accessibility_description">Draws the notification light over the always-on display.</string>
     <string name="section_status">Status</string>
     <string name="section_light">Light</string>

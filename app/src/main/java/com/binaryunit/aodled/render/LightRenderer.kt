@@ -15,6 +15,8 @@ import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.config.RingPlacement
 import com.binaryunit.aodled.config.Style
+import com.binaryunit.aodled.config.grownBy
+import com.binaryunit.aodled.config.lineThickness
 import com.binaryunit.aodled.config.ringThickness
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -31,6 +33,10 @@ data class LightState(
     val cutout: CutoutPlacement? = null,
     val cutoutPath: Path? = null,
 )
+
+/** Width of the lit line, which sets the burn-in shift. Without a cutout path, Cutout is drawn as the ring. */
+fun LightState.lineThickness(): Float =
+    cfg.lineThickness(ring, dot, cutout.takeIf { cutoutPath != null }, cutoutPath?.contourHalfSize() ?: 0f)
 
 private const val EDGE_COMET_SHARE = 0.2f  // comet length as a share of the screen border
 private const val EDGE_COMET_STEPS = 12
@@ -83,12 +89,13 @@ class LightRenderer {
     }
 
     private fun drawRing(canvas: Canvas, s: LightState, colour: Int, alpha: Float, anim: Animation, tMs: Long) {
-        val cx = s.ring.cx + s.offset.dx
-        val cy = s.ring.cy + s.offset.dy
-        val r = s.ring.radius
-        val t = ringThickness(r)
+        val cx = s.ring.cx
+        val cy = s.ring.cy
+        // Burn-in grows or shrinks the ring around the camera; the line keeps the saved size's thickness
+        val r = s.ring.radius + s.offset.dx
+        val t = ringThickness(s.ring.radius, s.cfg.ringLineScale)
         if (anim == Animation.MOTION) {
-            drawSwirl(canvas, cx, cy, r, colour, tMs)
+            drawSwirl(canvas, cx, cy, r, swirlStroke(s.ring.radius, tMs, s.cfg.ringLineScale), colour, tMs)
         } else {
             val c = withAlpha(colour, alpha)
             canvas.drawCircle(cx, cy, r, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
@@ -97,8 +104,7 @@ class LightRenderer {
     }
 
     /** Faint ring that swells and thins, at full brightness only inside a sweeping 45° band. */
-    private fun drawSwirl(canvas: Canvas, cx: Float, cy: Float, r: Float, colour: Int, tMs: Long) {
-        val w = swirlStroke(r, tMs)
+    private fun drawSwirl(canvas: Canvas, cx: Float, cy: Float, r: Float, w: Float, colour: Int, tMs: Long) {
         if (w < 0.5f) return
         val faint = withAlpha(colour, SWIRL_FAINT_ALPHA)
         canvas.drawCircle(cx, cy, r, stroke(glowPaint(w), w, withAlpha(faint, glowAlpha(aod))))
@@ -173,14 +179,16 @@ class LightRenderer {
             contoursFor = source
         }
         source.computeBounds(rect, true)
-        val dx = p.cx - rect.centerX() + s.offset.dx
-        val dy = p.cy - rect.centerY() + s.offset.dy
-        val t = ringThickness(cutoutHalf * p.scale)
+        val dx = p.cx - rect.centerX()
+        val dy = p.cy - rect.centerY()
+        val t = ringThickness(cutoutHalf * p.scale, s.cfg.cutoutLineScale)
+        // Burn-in grows or shrinks the outline around the camera, like the ring
+        val scale = p.grownBy(s.offset.dx.toFloat(), cutoutHalf)
         val span = snakeSpan(tMs)
         if (anim == Animation.MOTION && span.head - span.tail < 1e-3f) return
         val c = withAlpha(colour, alpha)
         for (contour in contours) {
-            matrix.setScale(p.scale, p.scale, contour.cx, contour.cy)
+            matrix.setScale(scale, scale, contour.cx, contour.cy)
             matrix.postTranslate(dx, dy)
             contour.path.transform(matrix, scaledPath)
             if (anim != Animation.MOTION) {

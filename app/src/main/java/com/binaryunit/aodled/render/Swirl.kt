@@ -17,7 +17,7 @@ const val SWIRL_BAND_START = -107.5f / 52f
 const val SWIRL_BAND_END = 108f / 52f
 
 /** Stroke width in px: swells to the still ring's thickness (owner's choice, thinner than Samsung's), then thins. */
-fun swirlStroke(radius: Float, tMs: Long): Float = swirlWidth(tMs) * ringThickness(radius)
+fun swirlStroke(radius: Float, tMs: Long, scale: Float = 1f): Float = swirlWidth(tMs) * ringThickness(radius, scale)
 
 /** Swell as a share of full width: quick swell, slow thinning, then a dark pause. */
 fun swirlWidth(tMs: Long): Float {

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Path
 import android.os.Bundle
 import android.view.MotionEvent
+import android.view.View
 import android.view.ScaleGestureDetector
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -14,6 +15,8 @@ import com.binaryunit.aodled.colour.Palette
 import com.binaryunit.aodled.config.Animation
 import com.binaryunit.aodled.config.Box
 import com.binaryunit.aodled.config.ColourMode
+import com.binaryunit.aodled.config.LINE_SCALE_MAX
+import com.binaryunit.aodled.config.LINE_SCALE_MIN
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.config.Prefs
@@ -34,12 +37,15 @@ import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
 import com.binaryunit.aodled.render.screenGeometry
 import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.slider.Slider
 
 /** Full-screen black placement editor. Done saves, Back discards. */
 class EditorActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var light: LightView
     private lateinit var hint: TextView
+    private lateinit var thicknessRow: View
+    private lateinit var thickness: Slider
     private lateinit var cfg: LightConfig
     private var width = 0
     private var height = 0
@@ -78,6 +84,8 @@ class EditorActivity : AppCompatActivity() {
         }
         light = findViewById(R.id.light)
         hint = findViewById(R.id.hint)
+        thicknessRow = findViewById(R.id.thickness_row)
+        thickness = findViewById(R.id.thickness)
 
         prefs = Prefs(this)
         val (w, h, c) = screenGeometry()
@@ -98,6 +106,18 @@ class EditorActivity : AppCompatActivity() {
             cfg = cfg.copy(style = styleButtons.entries.first { it.value == id }.key)
             render()
         }
+        thickness.valueFrom = LINE_SCALE_MIN
+        thickness.valueTo = LINE_SCALE_MAX
+        thickness.addOnChangeListener { _, value, fromUser ->
+            if (!fromUser) return@addOnChangeListener
+            cfg = when (cfg.style) {
+                Style.RING -> cfg.copy(ringLineScale = value)
+                Style.CUTOUT -> cfg.copy(cutoutLineScale = value)
+                Style.DOT, Style.EDGES -> cfg
+            }
+            render()
+        }
+        findViewById<View>(R.id.help_burn_in).setOnClickListener { showHelp(it, R.string.help_burn_in, above = true) }
         findViewById<android.view.View>(R.id.reset).setOnClickListener {
             cfg = withDefaults(cfg.resetPlacement())
             render()
@@ -170,6 +190,14 @@ class EditorActivity : AppCompatActivity() {
 
     private fun render() {
         hint.setText(if (cfg.style == Style.EDGES) R.string.editor_hint_edges else R.string.editor_hint)
+        // Dot is filled and Edges pinch their own thickness, so the slider is only for the outlines
+        val lineScale = when (cfg.style) {
+            Style.RING -> cfg.ringLineScale
+            Style.CUTOUT -> cfg.cutoutLineScale
+            Style.DOT, Style.EDGES -> null
+        }
+        thicknessRow.visibility = if (lineScale != null) View.VISIBLE else View.GONE
+        if (lineScale != null) thickness.value = lineScale
         val colour = if (cfg.colourMode == ColourMode.FIXED) cfg.fixedColour else Palette.WHITE
         light.state = LightState(
             cfg, cfg.ring!!, cfg.dot!!, colour, Offset(0, 0), cornerRadius, cutout = cfg.cutout, cutoutPath = cutoutPath,
