@@ -1,0 +1,188 @@
+name: Bug or device report
+description: Something doesn't work, or tell us how AODLed runs on your phone.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! I can't test on your phone, so these answers are what I work from.
+        Please use one issue per phone.
+
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Works fine (device report)
+        - No light
+        - Light in the wrong place or shape
+        - Light doesn't turn off
+        - Can't turn on a permission or setting
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: AODLed version
+      description: Shown in AODLed under About.
+      placeholder: "0.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: source
+    attributes:
+      label: Installed from
+      options:
+        - GitHub
+        - Obtainium
+        - F-Droid
+        - Built from source
+    validations:
+      required: true
+
+  - type: input
+    id: phone
+    attributes:
+      label: Phone model
+      placeholder: "Galaxy Z Fold 7"
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Android version and system
+      description: Settings → About phone.
+      placeholder: "Android 16, One UI 8"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: "**Status card in AODLed:** what each row says."
+
+  - type: dropdown
+    id: status_listener
+    attributes:
+      label: Notification access
+      options:
+        - "On"
+        - "Off"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status_accessibility
+    attributes:
+      label: Accessibility service
+      options:
+        - "On"
+        - "Off"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status_battery
+    attributes:
+      label: Battery unrestricted
+      options:
+        - "On"
+        - "Off"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status_aod
+    attributes:
+      label: Always-on display
+      options:
+        - "On"
+        - "Off"
+        - Unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: aod_mode
+    attributes:
+      label: Always-on display mode
+      description: In your phone's own settings. Some phones only show it after a tap or on a schedule.
+      options:
+        - Show always
+        - Tap to show
+        - Scheduled
+        - Only for new notifications
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: screen
+    attributes:
+      label: Send a test notification from AODLed, don't open it, then lock the phone. The screen shows
+      options:
+        - The light
+        - The phone's normal always-on display
+        - Plain black
+        - Fully off
+        - Didn't try
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dnd
+    attributes:
+      label: Do Not Disturb during the test
+      description: Notifications muted by Do Not Disturb stay dark on purpose.
+      options:
+        - "Off"
+        - "On"
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: style
+    attributes:
+      label: Style (optional)
+      options:
+        - Ring
+        - Dot
+        - Edges
+        - Cutout
+
+  - type: input
+    id: screens
+    attributes:
+      label: Foldable or two screens? (optional)
+      description: Which screen did you test on?
+      placeholder: "Folded, cover screen"
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details (optional)
+      description: What you expected and what you saw.
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or photos (optional)
+      description: A screenshot of the Status card helps. The always-on display can't be screenshotted, so use a photo for that if possible.
+
+  - type: textarea
+    id: adb
+    attributes:
+      label: adb output (optional, for technical users)
+      description: |
+        Skip this if you don't use adb. Send a test notification, lock the phone, wait 10 seconds, then run:
+        ```
+        adb shell settings get secure doze_always_on
+        adb shell settings get global zen_mode
+        adb shell "dumpsys power | grep -E 'mWakefulness=|mDozeScreenState'"
+        adb shell "dumpsys display | grep -m3 -E 'mScreenState|mActualState'"
+        adb shell "dumpsys window windows | grep -iE 'AODLed|dream'"
+        ```
+      render: shell
