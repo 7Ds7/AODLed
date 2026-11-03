@@ -6,6 +6,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 
 const val ANIM_FPS = 30
+const val FRAME_MS = 1000L / ANIM_FPS
 const val PULSE_PERIOD_MS = 4000L
 const val PULSE_DARK_MS = 600L
 const val ROTATE_PERIOD_MS = 2000L
@@ -32,7 +33,21 @@ fun pulseAlpha(tMs: Long): Float {
     }
 }
 
-fun rotationAngle(tMs: Long): Float = (tMs % ROTATE_PERIOD_MS) * 360f / ROTATE_PERIOD_MS
+/**
+ * [tMs]'s place in a [period]-long cycle, rounded down to a whole frame. Every cycle then draws the same few shapes,
+ * so the GPU's cache of blurred glows reuses them instead of gaining one per frame (measured on a Pixel: 3000+
+ * cached surfaces, about 130 MB, with Ring Motion on the AOD).
+ */
+fun animPhase(tMs: Long, period: Long): Long {
+    val p = tMs % period
+    return p - p % FRAME_MS
+}
+
+/** Whole frames that fit in a [period]-long cycle. */
+fun framesPer(period: Long): Int = (period / FRAME_MS).toInt()
+
+/** Which of [framesPer] frames [tMs] falls in; every frame lasts [FRAME_MS], the last leads straight back to the first. */
+fun animFrame(tMs: Long, period: Long): Int = ((tMs / FRAME_MS) % framesPer(period)).toInt()
 
 /** Blur radius of the soft halo drawn around a line or dot of the given thickness. */
 fun glowRadius(thickness: Float, aod: Boolean = false): Float =

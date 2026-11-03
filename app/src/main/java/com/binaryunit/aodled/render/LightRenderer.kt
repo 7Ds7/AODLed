@@ -38,8 +38,7 @@ data class LightState(
 fun LightState.lineThickness(): Float =
     cfg.lineThickness(ring, dot, cutout.takeIf { cutoutPath != null }, cutoutPath?.contourHalfSize() ?: 0f)
 
-private const val EDGE_COMET_SHARE = 0.2f  // comet length as a share of the screen border
-private const val EDGE_COMET_STEPS = 12
+private const val EDGE_COMET_STEPS = 12    // segments of one frame's travel each: 12 of a 60-frame lap is a fifth of the border
 private const val CUTOUT_SAMPLES = 64       // points per contour used to find its leftmost point and winding
 
 /**
@@ -47,6 +46,23 @@ private const val CUTOUT_SAMPLES = 64       // points per contour used to find i
  * length) and which way is clockwise on screen.
  */
 private class Contour(val path: Path, val cx: Float, val cy: Float, val startFraction: Float, val clockwise: Boolean)
+
+/**
+ * Moving segments kept per frame step and reused every cycle. The GPU caches a blurred path by the path object, so a
+ * fresh path each frame would add a cache entry every frame; [owner] is what the segments were built for.
+ */
+private class SegmentCache {
+    private var owner: Any? = null
+    private val paths = HashMap<Long, Path>()
+
+    fun get(owner: Any, key: Long, build: (Path) -> Unit): Path {
+        if (owner != this.owner) {
+            paths.clear()
+            this.owner = owner
+        }
+        return paths.getOrPut(key) { Path().also(build) }
+    }
+}
 
 /**
  * Shared by the doze overlay and the editor, so what you place is what you get. Every shape is drawn twice:
@@ -60,7 +76,6 @@ class LightRenderer {
     private var aod = false
     private val rect = RectF()
     private val path = Path()
-    private val segment = Path()
     private val measure = PathMeasure()
     private val matrix = Matrix()
     private val scaledPath = Path()
@@ -68,6 +83,8 @@ class LightRenderer {
     private var contoursFor: Path? = null
     private var contours: List<Contour> = emptyList()
     private var cutoutHalf = 0f
+    private val cometSegments = SegmentCache()
+    private val snakeSegments = SegmentCache()
 
     fun draw(canvas: Canvas, s: LightState, tMs: Long) {
         canvas.drawColor(Color.BLACK)
@@ -95,7 +112,8 @@ class LightRenderer {
         val r = s.ring.radius + s.offset.dx
         val t = ringThickness(s.ring.radius, s.cfg.ringLineScale)
         if (anim == Animation.MOTION) {
-            drawSwirl(canvas, cx, cy, r, swirlStroke(s.ring.radius, tMs, s.cfg.ringLineScale), colour, tMs)
+            val phase = animPhase(tMs, SWIRL_PERIOD_MS)
+            drawSwirl(canvas, cx, cy, r, swirlStroke(s.ring.radius, phase, s.cfg.ringLineScale), colour, phase)
         } else {
             val c = withAlpha(colour, alpha)
             canvas.drawCircle(cx, cy, r, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
@@ -145,18 +163,20 @@ class LightRenderer {
         val corner = maxOf(0f, s.cornerRadius - inset)
         rect.set(inset, inset, canvas.width - inset, canvas.height - inset)
         if (anim == Animation.MOTION) {
-            // Comet along the border: short segments brightening from tail to head
+            // Comet along the border: short segments brightening from tail to head. Each segment is one frame's travel
+            // long and sits on a fixed slot, so the border has only one segment path per frame of the lap
             path.reset()
             path.addRoundRect(rect, corner, corner, Path.Direction.CW)
             measure.setPath(path, true)
             val length = measure.length
-            val head = rotationAngle(tMs) / 360f * length
-            val step = length * EDGE_COMET_SHARE / EDGE_COMET_STEPS
+            val frames = framesPer(ROTATE_PERIOD_MS)
+            val head = animFrame(tMs, ROTATE_PERIOD_MS)
+            val step = length / frames
+            val owner = listOf(rect.left, rect.top, rect.right, rect.bottom, corner)
             for (i in 0 until EDGE_COMET_STEPS) {
                 val a = (i + 1f) / EDGE_COMET_STEPS
-                val start = head - step * (EDGE_COMET_STEPS - i)
-                segment.reset()
-                addSegment(start, start + step, length)
+                val slot = Math.floorMod(head - (EDGE_COMET_STEPS - i), frames)
+                val segment = cometSegments.get(owner, slot.toLong()) { addSegment(it, slot * step, (slot + 1) * step, length) }
                 canvas.drawPath(segment, stroke(glowPaint(t), t, withAlpha(colour, a * glowAlpha(aod))))
                 canvas.drawPath(segment, stroke(core, t, withAlpha(colour, a)).apply { strokeCap = Paint.Cap.ROUND })
             }
@@ -184,10 +204,12 @@ class LightRenderer {
         val t = ringThickness(cutoutHalf * p.scale, s.cfg.cutoutLineScale)
         // Burn-in grows or shrinks the outline around the camera, like the ring
         val scale = p.grownBy(s.offset.dx.toFloat(), cutoutHalf)
-        val span = snakeSpan(tMs)
+        val phase = animPhase(tMs, SNAKE_PERIOD_MS)
+        val span = snakeSpan(phase)
+        val owner = listOf(source, scale, dx, dy)
         if (anim == Animation.MOTION && span.head - span.tail < 1e-3f) return
         val c = withAlpha(colour, alpha)
-        for (contour in contours) {
+        for ((n, contour) in contours.withIndex()) {
             matrix.setScale(scale, scale, contour.cx, contour.cy)
             matrix.postTranslate(dx, dy)
             contour.path.transform(matrix, scaledPath)
@@ -199,8 +221,7 @@ class LightRenderer {
             measure.setPath(scaledPath, true)
             val length = measure.length
             val (from, to) = snakeRange(contour.startFraction * length, length, span, contour.clockwise)
-            segment.reset()
-            addSegment(from, to, length)
+            val segment = snakeSegments.get(owner, phase / FRAME_MS * contours.size + n) { addSegment(it, from, to, length) }
             canvas.drawPath(segment, stroke(glowPaint(t), t, withAlpha(colour, glowAlpha(aod))))
             canvas.drawPath(segment, stroke(core, t, colour))
         }
@@ -219,12 +240,12 @@ class LightRenderer {
         return Contour(path, box.centreX, box.centreY, snakeStart(xs, ys).toFloat() / CUTOUT_SAMPLES, isClockwise(xs, ys))
     }
 
-    /** Appends [from, to) of the measured closed path to [segment], wrapping around its start. */
-    private fun addSegment(from: Float, to: Float, length: Float) {
+    /** Appends [from, to) of the measured closed path to [dst], wrapping around its start. */
+    private fun addSegment(dst: Path, from: Float, to: Float, length: Float) {
         val a = ((from % length) + length) % length
         val b = a + (to - from)
-        measure.getSegment(a, minOf(b, length), segment, true)
-        if (b > length) measure.getSegment(0f, b - length, segment, true)
+        measure.getSegment(a, minOf(b, length), dst, true)
+        if (b > length) measure.getSegment(0f, b - length, dst, true)
     }
 
     private fun glowPaint(thickness: Float): Paint {

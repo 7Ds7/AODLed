@@ -5,12 +5,16 @@ import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.render.PULSE_DARK_MS
 import com.binaryunit.aodled.render.PULSE_PERIOD_MS
 import com.binaryunit.aodled.render.ROTATE_PERIOD_MS
+import com.binaryunit.aodled.render.FRAME_MS
+import com.binaryunit.aodled.render.animFrame
+import com.binaryunit.aodled.render.animPhase
 import com.binaryunit.aodled.render.effectiveAnimation
+import com.binaryunit.aodled.render.framesPer
 import com.binaryunit.aodled.render.glowAlpha
 import com.binaryunit.aodled.render.glowRadius
 import com.binaryunit.aodled.render.pulseAlpha
-import com.binaryunit.aodled.render.rotationAngle
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AnimationTest {
@@ -30,10 +34,14 @@ class AnimationTest {
         assertEquals(1f, pulseAlpha(PULSE_PERIOD_MS), 0.001f)
     }
 
-    @Test fun `rotation wraps`() {
-        assertEquals(0f, rotationAngle(0), 0.001f)
-        assertEquals(180f, rotationAngle(ROTATE_PERIOD_MS / 2), 0.001f)
-        assertEquals(0f, rotationAngle(ROTATE_PERIOD_MS), 0.001f)
+    @Test fun `frame counts whole frames and wraps after a lap`() {
+        val frames = framesPer(ROTATE_PERIOD_MS)
+        assertEquals(60, frames)                                               // the comet's 12 segments are a fifth
+        assertEquals(0, animFrame(0, ROTATE_PERIOD_MS))
+        assertEquals(0, animFrame(FRAME_MS - 1, ROTATE_PERIOD_MS))
+        assertEquals(1, animFrame(FRAME_MS, ROTATE_PERIOD_MS))
+        assertEquals(frames - 1, animFrame(frames * FRAME_MS - 1, ROTATE_PERIOD_MS))
+        assertEquals(0, animFrame(frames * FRAME_MS, ROTATE_PERIOD_MS))
     }
 
     @Test fun `glow scales with thickness within bounds`() {
@@ -50,4 +58,18 @@ class AnimationTest {
     }
 
     @Test fun `rotation is quick`() = assertEquals(true, com.binaryunit.aodled.render.ROTATE_PERIOD_MS <= 2000L)
+
+    @Test fun `phase repeats exactly every cycle`() {
+        for (t in 0L until 3000L step 7) assertEquals(animPhase(t, 1500), animPhase(t + 1500 * 41, 1500))
+    }
+
+    @Test fun `phase steps by whole frames within the cycle`() {
+        val phases = (0L until 1500L).map { animPhase(it, 1500) }.toSet()
+        assertTrue(phases.all { it % FRAME_MS == 0L && it < 1500 })
+        assertEquals(1500 / FRAME_MS + 1, phases.size.toLong())               // 0, 33, …, 1485: one shape per frame
+    }
+
+    @Test fun `phase never runs ahead of the clock`() {
+        for (t in 0L until 1500L) assertTrue(animPhase(t, 1500) in t - FRAME_MS + 1..t)
+    }
 }
