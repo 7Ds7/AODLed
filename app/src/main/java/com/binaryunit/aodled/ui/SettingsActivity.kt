@@ -34,10 +34,12 @@ import com.binaryunit.aodled.colour.pickedColour
 import com.binaryunit.aodled.colour.visibleOnBlack
 import com.binaryunit.aodled.config.Animation
 import com.binaryunit.aodled.config.ColourMode
+import com.binaryunit.aodled.config.FilterMode
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.LightOff
 import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.config.Style
+import com.binaryunit.aodled.config.withFilterList
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.service.LightListenerService
 import com.google.android.material.appbar.MaterialToolbar
@@ -72,6 +74,7 @@ class SettingsActivity : AppCompatActivity() {
     private val colourModes = mapOf(ColourMode.APP to R.id.colour_app, ColourMode.FIXED to R.id.colour_fixed)
     private val lightOffs = mapOf(LightOff.ON_DISMISS to R.id.off_dismiss, LightOff.ON_UNLOCK to R.id.off_unlock)
     private val dndModes = mapOf(true to R.id.dnd_respect, false to R.id.dnd_ignore)
+    private val filterModes = mapOf(FilterMode.ALL to R.id.filter_all, FilterMode.ALLOW to R.id.filter_allow, FilterMode.IGNORE to R.id.filter_ignore)
 
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) postTest()
@@ -102,6 +105,7 @@ class SettingsActivity : AppCompatActivity() {
         palette = findViewById(R.id.palette)
 
         findViewById<View>(R.id.help_status).setOnClickListener { showHelp(it, R.string.help_status) }
+        findViewById<View>(R.id.help_filter).setOnClickListener { showHelp(it, R.string.help_filter, above = true) }
         findViewById<View>(R.id.help_light_off).setOnClickListener { showHelp(it, R.string.help_light_off, above = true) }
         findViewById<View>(R.id.help_respect_dnd).setOnClickListener { showHelp(it, R.string.help_respect_dnd, above = true) }
         cutout = cutoutPath()
@@ -110,6 +114,10 @@ class SettingsActivity : AppCompatActivity() {
         bindToggle(R.id.colour_group, colourModes) { cfg.copy(colourMode = it) }
         bindToggle(R.id.light_off_group, lightOffs) { cfg.copy(lightOff = it) }
         bindToggle(R.id.dnd_group, dndModes) { cfg.copy(respectDnd = it) }
+        // Clicks, not checks: tapping the list already in use opens it again
+        findViewById<View>(R.id.filter_all).setOnClickListener { save(cfg.copy(filterMode = FilterMode.ALL)) }
+        findViewById<View>(R.id.filter_allow).setOnClickListener { editFilterList(FilterMode.ALLOW) }
+        findViewById<View>(R.id.filter_ignore).setOnClickListener { editFilterList(FilterMode.IGNORE) }
         buildPalette()
 
         findViewById<View>(R.id.adjust).setOnClickListener { startActivity(Intent(this, EditorActivity::class.java)) }
@@ -136,6 +144,19 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButtonToggleGroup>(groupId).addOnButtonCheckedListener { _, id, checked ->
             if (!checked || binding) return@addOnButtonCheckedListener
             save(update(ids.entries.first { it.value == id }.key))
+        }
+    }
+
+    /** Opens [mode]'s list; Done saves it and switches to it, and a list saved empty is deleted. */
+    private fun editFilterList(mode: FilterMode) {
+        syncControls() // the tap checked this option; it waits for Done
+        showAppFilter(mode, if (mode == FilterMode.ALLOW) cfg.allowList else cfg.ignoreList) { picked ->
+            save(cfg.withFilterList(mode, picked) ?: return@showAppFilter)
+            if (picked.isEmpty()) Snackbar.make(
+                findViewById(R.id.root),
+                if (mode == FilterMode.ALLOW) R.string.filter_allow_deleted else R.string.filter_ignore_deleted,
+                Snackbar.LENGTH_LONG,
+            ).show()
         }
     }
 
@@ -284,6 +305,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButtonToggleGroup>(R.id.colour_group).check(colourModes.getValue(cfg.colourMode))
         findViewById<MaterialButtonToggleGroup>(R.id.light_off_group).check(lightOffs.getValue(cfg.lightOff))
         findViewById<MaterialButtonToggleGroup>(R.id.dnd_group).check(dndModes.getValue(cfg.respectDnd))
+        findViewById<MaterialButtonToggleGroup>(R.id.filter_group).check(filterModes.getValue(cfg.filterMode))
         palette.visibility = if (cfg.colourMode == ColourMode.FIXED) View.VISIBLE else View.GONE
         val preset = (0 until palette.childCount).map { palette.getChildAt(it) as Chip }
             .firstOrNull { it.tag == cfg.fixedColour }

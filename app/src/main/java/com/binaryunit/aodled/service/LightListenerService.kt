@@ -2,32 +2,38 @@ package com.binaryunit.aodled.service
 
 import android.app.NotificationManager
 import android.content.ComponentName
+import android.os.Process
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Prefs
+import com.binaryunit.aodled.config.SeenApps
 import com.binaryunit.aodled.notify.NotifInfo
+import com.binaryunit.aodled.notify.passesFilter
 import com.binaryunit.aodled.notify.qualifies
 
 /** Feeds qualifying notifications (Owner + Private Space + forwarded) into [AppState.tracker]. */
 class LightListenerService : NotificationListenerService() {
     private lateinit var colours: ColourResolver
     private lateinit var prefs: Prefs
-    private var respectDnd = true
+    private lateinit var seen: SeenApps
+    private var cfg = LightConfig()
 
-    // Notifications already showing light up or go dark as soon as the setting flips
+    // Notifications already showing light up or go dark as soon as DND or the app filter changes
     private val onPrefsChanged: () -> Unit = {
-        val now = prefs.load().respectDnd
-        if (now != respectDnd) {
-            respectDnd = now
-            if (rebuild(currentRanking)) AppState.changed()
-        }
+        val now = prefs.load()
+        val changed = now.respectDnd != cfg.respectDnd || now.filterMode != cfg.filterMode ||
+            now.allowList != cfg.allowList || now.ignoreList != cfg.ignoreList
+        cfg = now
+        if (changed && rebuild(currentRanking)) AppState.changed()
     }
 
     override fun onCreate() {
         super.onCreate()
         colours = ColourResolver(this)
         prefs = Prefs(this)
-        respectDnd = prefs.load().respectDnd
+        seen = SeenApps(this)
+        cfg = prefs.load()
         prefs.onChange(onPrefsChanged)
     }
 
@@ -75,7 +81,12 @@ class LightListenerService : NotificationListenerService() {
         val importance = if (ranked) ranking.importance else NotificationManager.IMPORTANCE_DEFAULT
         val suspended = ranked && ranking.isSuspended
         val dndBlocked = ranked && !ranking.matchesInterruptionFilter()
-        if (!qualifies(n.flags, importance, suspended, dndBlocked, respectDnd, sbn.packageName, n.channelId ?: "", packageName)) return null
+        if (!qualifies(n.flags, importance, suspended, dndBlocked, cfg.respectDnd, sbn.packageName, n.channelId ?: "", packageName)) return null
+        if (sbn.packageName != packageName) {
+            // Recorded before filtering, so an app stays in the list after it's left out
+            seen.record(sbn.packageName, own = sbn.user == Process.myUserHandle())
+            if (!passesFilter(sbn.packageName, cfg)) return null
+        }
         return NotifInfo(sbn.key, sbn.postTime, n.`when`, colours.colourFor(sbn))
     }
 }

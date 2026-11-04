@@ -2,6 +2,8 @@ package com.binaryunit.aodled.notify
 
 import android.app.Notification
 import android.app.NotificationManager
+import com.binaryunit.aodled.config.FilterMode
+import com.binaryunit.aodled.config.LightConfig
 
 const val TEST_CHANNEL_ID = "test"
 
@@ -22,4 +24,11 @@ fun qualifies(
     if (pkg == ownPkg) return channelId == TEST_CHANNEL_ID
     if (dndBlocked && respectDnd) return false
     return true
+}
+
+/** Whether the app filter lets [pkg] light the LED; the test notification never comes here. */
+fun passesFilter(pkg: String, cfg: LightConfig): Boolean = when (cfg.filterMode) {
+    FilterMode.ALL -> true
+    FilterMode.ALLOW -> pkg in cfg.allowList
+    FilterMode.IGNORE -> pkg !in cfg.ignoreList
 }
