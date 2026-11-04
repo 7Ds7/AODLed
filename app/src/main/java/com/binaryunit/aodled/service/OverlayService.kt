@@ -176,6 +176,8 @@ class OverlayService : AccessibilityService() {
     /** Recomputes what to draw at [offset] and hands it to the view. */
     private fun draw(offset: Offset): Light {
         val v = view ?: return Light.OFF
+        // Display fully off (no AOD): stop the frame and shift loops; the display listener redraws on DOZE / ON
+        if (lastDisplayState == Display.STATE_OFF) return Light.OFF
         val colour = AppState.tracker.current(cfg.lightOff)?.let { displayColour(it.colour, cfg) }
         val state = state(offset, colour)
         wake.poke()
