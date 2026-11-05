@@ -146,8 +146,9 @@ class OverlayService : AccessibilityService() {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_USER_PRESENT)
         }
-        // System broadcasts still arrive; Android 12 has no flag, and only the system can send these anyway
-        if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenReceiver, filter, RECEIVER_NOT_EXPORTED)
+        // Exported: USER_PRESENT comes from SystemUI, an app uid, so a not-exported receiver never gets it.
+        // Safe, all three actions are protected and only the system can send them. Android 12 has no flag.
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenReceiver, filter, RECEIVER_EXPORTED)
         else registerReceiver(screenReceiver, filter)
         AppState.addListener(onStateChanged)
         prefs.onChange(onPrefsChanged)
