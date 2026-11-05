@@ -17,8 +17,19 @@ class DozeWake(context: Context) {
         null
     }
 
+    // Not reference counted: each acquire replaces the last one's timeout, so a later poke cuts a long hold short
+
     fun poke(ms: Long = 250) {
         cpu.acquire(ms)
         draw?.acquire(ms)
+    }
+
+    /** CPU only, so a timer can fire after [ms] (a pulse pause); the panel isn't kept awake to draw. */
+    fun holdCpu(ms: Long) {
+        cpu.acquire(ms)
+    }
+
+    fun releaseCpu() {
+        if (cpu.isHeld) cpu.release()
     }
 }

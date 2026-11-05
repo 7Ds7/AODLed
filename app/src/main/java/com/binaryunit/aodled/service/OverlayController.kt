@@ -2,7 +2,6 @@ package com.binaryunit.aodled.service
 
 import com.binaryunit.aodled.config.BurnIn
 import com.binaryunit.aodled.config.Offset
-import com.binaryunit.aodled.render.ANIM_FPS
 
 const val LINGER_MS = 100L
 
@@ -27,7 +26,8 @@ class OverlayController(
         fun coverUp()
         fun coverDown()
         fun draw(offset: Offset): Light
-        fun frame()
+        /** Draws the next animation frame; returns how long to wait before the one after. */
+        fun frame(): Long
     }
 
     private var covered = false
@@ -51,8 +51,7 @@ class OverlayController(
 
     private val frame = object : Runnable {
         override fun run() {
-            host.frame()
-            scheduler.post(this, 1000L / ANIM_FPS)
+            scheduler.post(this, host.frame())
         }
     }
 

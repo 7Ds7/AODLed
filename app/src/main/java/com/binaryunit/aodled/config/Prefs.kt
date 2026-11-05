@@ -13,6 +13,11 @@ class Prefs(context: Context) {
         return LightConfig(
             style = enumOr(KEY_STYLE, d.style),
             animation = enumOr(KEY_ANIMATION, d.animation),
+            pulse = Pulse(
+                prefs.getLong(KEY_PULSE_PERIOD, d.pulse.periodMs),
+                prefs.getInt(KEY_PULSE_BLINKS, d.pulse.blinks),
+                prefs.getLong(KEY_PULSE_PAUSE, d.pulse.pauseMs),
+            ),
             colourMode = enumOr(KEY_COLOUR_MODE, d.colourMode),
             fixedColour = prefs.getInt(KEY_FIXED_COLOUR, d.fixedColour),
             lightOff = enumOr(KEY_LIGHT_OFF, d.lightOff),
@@ -40,6 +45,9 @@ class Prefs(context: Context) {
         prefs.edit().apply {
             putString(KEY_STYLE, c.style.name)
             putString(KEY_ANIMATION, c.animation.name)
+            putLong(KEY_PULSE_PERIOD, c.pulse.periodMs)
+            putInt(KEY_PULSE_BLINKS, c.pulse.blinks)
+            putLong(KEY_PULSE_PAUSE, c.pulse.pauseMs)
             putString(KEY_COLOUR_MODE, c.colourMode.name)
             putInt(KEY_FIXED_COLOUR, c.fixedColour)
             putString(KEY_LIGHT_OFF, c.lightOff.name)
@@ -84,6 +92,9 @@ class Prefs(context: Context) {
     private companion object {
         const val KEY_STYLE = "style"
         const val KEY_ANIMATION = "animation"
+        const val KEY_PULSE_PERIOD = "pulse_period"
+        const val KEY_PULSE_BLINKS = "pulse_blinks"
+        const val KEY_PULSE_PAUSE = "pulse_pause"
         const val KEY_COLOUR_MODE = "colour_mode"
         const val KEY_FIXED_COLOUR = "fixed_colour"
         const val KEY_LIGHT_OFF = "light_off"

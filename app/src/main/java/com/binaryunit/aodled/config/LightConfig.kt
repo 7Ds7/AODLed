@@ -12,10 +12,21 @@ data class DotPlacement(val x: Float, val y: Float, val size: Float)
 /** The cutout outline scaled by [scale] around its bounds' centre, with that centre moved to ([cx], [cy]). */
 data class CutoutPlacement(val cx: Float, val cy: Float, val scale: Float)
 
+// The pulse popup's slider steps; 4 s is the original pulse
+val PULSE_PERIODS = listOf(100L, 200L, 300L, 500L, 1000L, 2000L, 3000L, 4000L, 5000L, 6000L, 7000L, 8000L)
+val PULSE_PAUSES = listOf(0L, 3_000L, 5_000L, 10_000L, 15_000L, 30_000L, 60_000L, 120_000L, 300_000L, 600_000L, 900_000L)
+
+/** One blink lasts [periodMs]; with a pause, [blinks] of them make a burst and the light stays dark for [pauseMs]. */
+data class Pulse(val periodMs: Long = 4000L, val blinks: Int = 3, val pauseMs: Long = 0L)
+
+/** More than 3 flashes a second, where flashing can trigger photosensitive seizures (WCAG 2.3.1). */
+fun Pulse.flashesFast(): Boolean = periodMs * 3 < 1000
+
 /** A null placement means "use the default derived from the camera cutout". */
 data class LightConfig(
     val style: Style = Style.RING,
     val animation: Animation = Animation.OFF,
+    val pulse: Pulse = Pulse(),
     val colourMode: ColourMode = ColourMode.APP,
     val fixedColour: Int = 0xFFFFFFFF.toInt(),
     val lightOff: LightOff = LightOff.ON_DISMISS,

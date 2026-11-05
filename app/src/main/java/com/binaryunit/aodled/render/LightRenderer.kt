@@ -13,6 +13,7 @@ import com.binaryunit.aodled.config.CutoutPlacement
 import com.binaryunit.aodled.config.DotPlacement
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.Offset
+import com.binaryunit.aodled.config.Pulse
 import com.binaryunit.aodled.config.RingPlacement
 import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.config.grownBy
@@ -21,7 +22,10 @@ import com.binaryunit.aodled.config.ringThickness
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/** Everything needed to draw one frame. [colour] null means black only (nothing pending). */
+/**
+ * Everything needed to draw one frame. [colour] null means black only (nothing pending). The pulse's bursts count
+ * from [pulseStart] (uptime); the editor keeps the original pulse, so placing the light never waits out a pause.
+ */
 data class LightState(
     val cfg: LightConfig,
     val ring: RingPlacement,
@@ -32,6 +36,8 @@ data class LightState(
     val aod: Boolean = false,
     val cutout: CutoutPlacement? = null,
     val cutoutPath: Path? = null,
+    val pulse: Pulse = Pulse(),
+    val pulseStart: Long = 0L,
 )
 
 /** Width of the lit line, which sets the burn-in shift. Without a cutout path, Cutout is drawn as the ring. */
@@ -91,7 +97,7 @@ class LightRenderer {
         val colour = s.colour ?: return
         aod = s.aod
         val anim = effectiveAnimation(s.cfg.style, s.cfg.animation)
-        val alpha = if (anim == Animation.PULSE) pulseAlpha(tMs) else 1f
+        val alpha = if (anim == Animation.PULSE) pulseAlpha(maxOf(0L, tMs - s.pulseStart), s.pulse) else 1f
         when (s.cfg.style) {
             Style.RING -> drawRing(canvas, s, colour, alpha, anim, tMs)
             Style.DOT -> drawDot(canvas, s, withAlpha(colour, alpha))

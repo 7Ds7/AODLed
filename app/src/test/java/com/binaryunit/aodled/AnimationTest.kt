@@ -1,6 +1,10 @@
 package com.binaryunit.aodled
 
 import com.binaryunit.aodled.config.Animation
+import com.binaryunit.aodled.config.LightConfig
+import com.binaryunit.aodled.config.PULSE_PERIODS
+import com.binaryunit.aodled.config.Pulse
+import com.binaryunit.aodled.config.flashesFast
 import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.render.PULSE_DARK_MS
 import com.binaryunit.aodled.render.PULSE_PERIOD_MS
@@ -13,7 +17,10 @@ import com.binaryunit.aodled.render.framesPer
 import com.binaryunit.aodled.render.glowAlpha
 import com.binaryunit.aodled.render.glowRadius
 import com.binaryunit.aodled.render.pulseAlpha
+import com.binaryunit.aodled.render.pulseFor
+import com.binaryunit.aodled.render.pulseFrameDelay
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -32,6 +39,57 @@ class AnimationTest {
         assertEquals(0f, pulseAlpha(fade + PULSE_DARK_MS / 2), 0.001f)
         assertEquals(0f, pulseAlpha(fade + PULSE_DARK_MS - 1), 0.01f)
         assertEquals(1f, pulseAlpha(PULSE_PERIOD_MS), 0.001f)
+    }
+
+    @Test fun `default pulse is the old one`() {
+        for (t in 0L until 9000L step 37) assertEquals(pulseAlpha(t), pulseAlpha(t, Pulse()), 0f)
+        assertEquals(PULSE_PERIOD_MS, Pulse().periodMs)
+        assertEquals(0L, Pulse().pauseMs)
+    }
+
+    @Test fun `a faster pulse scales the whole blink`() {
+        val p = Pulse(periodMs = 1000)
+        assertEquals(1f, pulseAlpha(0, p), 0.001f)
+        assertEquals(0f, pulseAlpha(500, p), 0.001f)                           // middle of the dark hold
+        assertEquals(1f, pulseAlpha(1000, p), 0.001f)
+        assertEquals(pulseAlpha(1000, Pulse()), pulseAlpha(250, p), 0.001f)  // same shape, a quarter the time
+    }
+
+    @Test fun `bursts blink the set number of times, then stay dark for the pause`() {
+        val p = Pulse(periodMs = 1000, blinks = 3, pauseMs = 5000)
+        val fade = (1000 - 1000 * PULSE_DARK_MS / PULSE_PERIOD_MS) / 2
+        assertEquals(1f, pulseAlpha(0, p), 0.001f)
+        assertEquals(1f, pulseAlpha(1000, p), 0.001f)
+        assertEquals(1f, pulseAlpha(2000, p), 0.001f)                          // third and last blink
+        assertEquals(0f, pulseAlpha(2000 + fade, p), 0.001f)                   // it fades out and the pause begins
+        assertEquals(0f, pulseAlpha(3000, p), 0f)                              // where a fourth blink would be
+        assertEquals(0f, pulseAlpha(2000 + fade + 4999, p), 0f)
+        assertEquals(1f, pulseAlpha(2000 + fade + 5000, p), 0.001f)            // next burst
+    }
+
+    @Test fun `frames run during a burst and wait out the pause`() {
+        val p = Pulse(periodMs = 1000, blinks = 2, pauseMs = 10_000)
+        val burst = 1000 + (1000 - 1000 * PULSE_DARK_MS / PULSE_PERIOD_MS) / 2
+        assertEquals(FRAME_MS, pulseFrameDelay(0, p))
+        assertEquals(FRAME_MS, pulseFrameDelay(burst - 1, p))
+        assertEquals(10_000L, pulseFrameDelay(burst, p))
+        assertEquals(4_000L, pulseFrameDelay(burst + 6_000, p))
+        assertEquals(FRAME_MS, pulseFrameDelay(burst + 10_000, p))
+        assertEquals(FRAME_MS, pulseFrameDelay(123_456, Pulse()))              // no pause: always frames
+    }
+
+    @Test fun `more than 3 flashes a second gets the warning`() {
+        assertTrue(Pulse(periodMs = 300).flashesFast())
+        assertFalse(Pulse(periodMs = 500).flashesFast())
+        assertFalse(Pulse().flashesFast())
+        assertEquals(100L, PULSE_PERIODS.first())
+        assertTrue(Pulse().periodMs in PULSE_PERIODS)
+    }
+
+    @Test fun `only Pulse uses the pulse settings, dot motion keeps the old pulse`() {
+        val custom = Pulse(periodMs = 500, blinks = 2, pauseMs = 60_000)
+        assertEquals(custom, pulseFor(LightConfig(animation = Animation.PULSE, pulse = custom)))
+        assertEquals(Pulse(), pulseFor(LightConfig(style = Style.DOT, animation = Animation.MOTION, pulse = custom)))
     }
 
     @Test fun `frame counts whole frames and wraps after a lap`() {

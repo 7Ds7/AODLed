@@ -53,7 +53,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
 
-private const val DISABLED_ALPHA = 0.38f // Material's opacity for disabled content
+internal const val DISABLED_ALPHA = 0.38f // Material's opacity for disabled content
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
@@ -110,7 +110,10 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<View>(R.id.help_respect_dnd).setOnClickListener { showHelp(it, R.string.help_respect_dnd, above = true) }
         cutout = cutoutPath()
         buildStyleMenu()
-        bindToggle(R.id.animation_group, animations) { cfg.copy(animation = it) }
+        // Clicks, not checks: tapping Pulse when it's already in use opens its settings again
+        findViewById<View>(R.id.anim_off).setOnClickListener { save(cfg.copy(animation = Animation.OFF)) }
+        findViewById<View>(R.id.anim_pulse).setOnClickListener { editPulse() }
+        findViewById<View>(R.id.anim_motion).setOnClickListener { save(cfg.copy(animation = Animation.MOTION)) }
         bindToggle(R.id.colour_group, colourModes) { cfg.copy(colourMode = it) }
         bindToggle(R.id.light_off_group, lightOffs) { cfg.copy(lightOff = it) }
         bindToggle(R.id.dnd_group, dndModes) { cfg.copy(respectDnd = it) }
@@ -158,6 +161,12 @@ class SettingsActivity : AppCompatActivity() {
                 Snackbar.LENGTH_LONG,
             ).show()
         }
+    }
+
+    /** Opens the pulse settings; Done saves them and switches to Pulse. */
+    private fun editPulse() {
+        syncControls() // the tap checked Pulse; it waits for Done
+        showPulse(cfg.pulse) { save(cfg.copy(animation = Animation.PULSE, pulse = it)) }
     }
 
     private fun postTest() {

@@ -41,11 +41,12 @@ private class FakeScheduler : Scheduler {
 private class FakeHost : OverlayController.Host {
     val events = mutableListOf<String>()
     var light = Light.STILL
+    var frameDelay = 33L
 
     override fun coverUp() { events += "up" }
     override fun coverDown() { events += "down" }
     override fun draw(offset: Offset): Light { events += "draw ${offset.dx}"; return light }
-    override fun frame() { events += "frame" }
+    override fun frame(): Long { events += "frame"; return frameDelay }
 }
 
 class OverlayControllerTest {
@@ -155,6 +156,13 @@ class OverlayControllerTest {
     @Test fun `no shift while nothing is lit`() {
         host.light = Light.OFF; c.screen(false); clock.advance(600_000)
         assertEquals(listOf("draw 1"), draws())
+    }
+
+    @Test fun `frames wait as long as the host asks`() {
+        host.light = Light.ANIMATED; host.frameDelay = 10_000; c.screen(false); clock.advance(9_999)
+        assertEquals(1, frames())
+        clock.advance(1)
+        assertEquals(2, frames())
     }
 
     @Test fun `light turning off stops frames and shifts`() {

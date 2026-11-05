@@ -35,10 +35,12 @@ class PendingTracker {
         seenAt = nowMillis
     }
 
-    fun current(mode: LightOff): NotifInfo? = entries.values
-        .filter { mode == LightOff.ON_DISMISS || it.alertAt > seenAt }
-        .maxByOrNull { it.alertAt }
-        ?.info
+    fun current(mode: LightOff): NotifInfo? = lit(mode).maxByOrNull { it.alertAt }?.info
+
+    /** When the newest alert still lighting the LED came in; a new one starts a fresh pulse burst. */
+    fun latestAlert(mode: LightOff): Long? = lit(mode).maxOfOrNull { it.alertAt }
+
+    private fun lit(mode: LightOff) = entries.values.filter { mode == LightOff.ON_DISMISS || it.alertAt > seenAt }
 
     private inline fun changes(update: () -> Unit): Boolean {
         val before = shown()

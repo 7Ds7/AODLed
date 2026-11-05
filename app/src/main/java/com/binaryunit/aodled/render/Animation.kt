@@ -1,6 +1,8 @@
 package com.binaryunit.aodled.render
 
 import com.binaryunit.aodled.config.Animation
+import com.binaryunit.aodled.config.LightConfig
+import com.binaryunit.aodled.config.Pulse
 import com.binaryunit.aodled.config.Style
 import kotlin.math.PI
 import kotlin.math.cos
@@ -22,15 +24,42 @@ const val AOD_GLOW_ALPHA = 1f
 fun effectiveAnimation(style: Style, anim: Animation): Animation =
     if (style == Style.DOT && anim == Animation.MOTION) Animation.PULSE else anim
 
-/** Fades fully out, stays black for [PULSE_DARK_MS], fades back in; 1.0 at the start of each period. */
-fun pulseAlpha(tMs: Long): Float {
-    val fade = (PULSE_PERIOD_MS - PULSE_DARK_MS) / 2
-    val t = tMs % PULSE_PERIOD_MS
+/** The popup's settings for Pulse; a dot on Motion falls back to the original pulse. */
+fun pulseFor(cfg: LightConfig): Pulse = if (cfg.animation == Animation.PULSE) cfg.pulse else Pulse()
+
+private fun Pulse.darkMs() = periodMs * PULSE_DARK_MS / PULSE_PERIOD_MS
+private fun Pulse.fadeMs() = (periodMs - darkMs()) / 2
+
+/** Lit time of a burst: every blink but the last in full, then the last one's fade out. */
+private fun Pulse.burstMs() = (blinks - 1) * periodMs + fadeMs()
+
+/**
+ * Fades fully out, stays black for a share of the period like [PULSE_DARK_MS] of [PULSE_PERIOD_MS], fades back in;
+ * 1.0 at the start of each period. With a pause, [tMs] counts from the start of a burst, and after the last blink
+ * fades out the light stays black until the next one.
+ */
+fun pulseAlpha(tMs: Long, p: Pulse = Pulse()): Float {
+    var t = tMs
+    if (p.pauseMs > 0) {
+        t %= p.burstMs() + p.pauseMs
+        if (t >= p.burstMs()) return 0f
+    }
+    t %= p.periodMs
+    val fade = p.fadeMs()
+    val dark = p.darkMs()
     return when {
         t < fade -> 0.5f + 0.5f * cos(PI * t / fade).toFloat()
-        t < fade + PULSE_DARK_MS -> 0f
-        else -> 0.5f - 0.5f * cos(PI * (t - fade - PULSE_DARK_MS) / fade).toFloat()
+        t < fade + dark -> 0f
+        else -> 0.5f - 0.5f * cos(PI * (t - fade - dark) / fade).toFloat()
     }
+}
+
+/** Wait before the next frame at [tMs] into the bursts: one frame while lit, the rest of the pause while dark. */
+fun pulseFrameDelay(tMs: Long, p: Pulse): Long {
+    if (p.pauseMs == 0L) return FRAME_MS
+    val cycle = p.burstMs() + p.pauseMs
+    val t = tMs % cycle
+    return if (t < p.burstMs()) FRAME_MS else cycle - t
 }
 
 /**

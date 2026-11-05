@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import android.view.Display
 import android.view.Gravity
 import android.view.WindowManager
@@ -25,6 +26,7 @@ import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
 import com.binaryunit.aodled.config.defaultRing
 import com.binaryunit.aodled.config.placementDiffers
+import com.binaryunit.aodled.render.FRAME_MS
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
 import com.binaryunit.aodled.render.box
@@ -33,6 +35,8 @@ import com.binaryunit.aodled.render.cornerRadius
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
 import com.binaryunit.aodled.render.lineThickness
+import com.binaryunit.aodled.render.pulseFor
+import com.binaryunit.aodled.render.pulseFrameDelay
 import com.binaryunit.aodled.render.screenGeometry
 import kotlin.random.Random
 
@@ -51,6 +55,9 @@ class OverlayService : AccessibilityService() {
     private var view: LightView? = null
     private var cfg = LightConfig()
     private var lastDisplayState = -1
+    // Pulse bursts count from here (uptime): the cover going up, the display coming back from OFF, a new alert
+    private var pulseStart = 0L
+    private var lastAlert: Long? = null
 
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayAdded(displayId: Int) {}
@@ -59,6 +66,7 @@ class OverlayService : AccessibilityService() {
             if (displayId != Display.DEFAULT_DISPLAY) return
             val state = dm.getDisplay(displayId)?.state ?: return
             if (state == lastDisplayState) return // ignore brightness / refresh-rate changes
+            if (lastDisplayState == Display.STATE_OFF) pulseStart = SystemClock.uptimeMillis()
             lastDisplayState = state
             evaluate()
         }
@@ -96,19 +104,29 @@ class OverlayService : AccessibilityService() {
     private val host = object : OverlayController.Host {
         override fun coverUp() {
             AppState.rebuild?.invoke()
+            pulseStart = SystemClock.uptimeMillis()
             view = LightView(this@OverlayService).also { wm.addView(it, layoutParams()) }
         }
 
         override fun coverDown() {
+            wake.releaseCpu() // a pulse pause may be holding it
             view?.let { wm.removeView(it) }
             view = null
         }
 
         override fun draw(offset: Offset): Light = this@OverlayService.draw(offset)
 
-        override fun frame() {
+        override fun frame(): Long {
             wake.poke(100)
             view?.invalidate()
+            if (effectiveAnimation(cfg.style, cfg.animation) != Animation.PULSE) return FRAME_MS
+            // In a pause nothing is drawn, but the CPU is held awake for it: unplugged, the Pixel 10a sleeps and this
+            // uptime timer with it, so the next burst never came (2026-11-04). The saving is the drawing, not the CPU.
+            // To let the CPU sleep too, wake for the next burst with an exact alarm instead (USE_EXACT_ALARM is granted
+            // at install, but doze may limit how often alarms fire, which short pauses would hit).
+            val delay = pulseFrameDelay(SystemClock.uptimeMillis() - pulseStart, pulseFor(cfg))
+            if (delay > FRAME_MS) wake.holdCpu(delay + 1000)
+            return delay
         }
     }
 
@@ -177,8 +195,16 @@ class OverlayService : AccessibilityService() {
     private fun draw(offset: Offset): Light {
         val v = view ?: return Light.OFF
         // Display fully off (no AOD): stop the frame and shift loops; the display listener redraws on DOZE / ON
-        if (lastDisplayState == Display.STATE_OFF) return Light.OFF
+        if (lastDisplayState == Display.STATE_OFF) {
+            wake.releaseCpu() // a pulse pause may be holding it
+            return Light.OFF
+        }
         val colour = AppState.tracker.current(cfg.lightOff)?.let { displayColour(it.colour, cfg) }
+        val alert = AppState.tracker.latestAlert(cfg.lightOff)
+        if (alert != lastAlert) {
+            lastAlert = alert
+            pulseStart = SystemClock.uptimeMillis()
+        }
         val state = state(offset, colour)
         wake.poke()
         v.state = state
@@ -203,6 +229,8 @@ class OverlayService : AccessibilityService() {
             aod = true,
             cutout = cfg.cutout ?: path?.let { defaultCutout(it.box(), it.contourHalfSize()) },
             cutoutPath = path,
+            pulse = pulseFor(cfg),
+            pulseStart = pulseStart,
         )
     }
 }
