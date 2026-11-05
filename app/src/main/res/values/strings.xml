@@ -14,6 +14,7 @@
     <string name="accessibility_description">Draws the notification light over the always-on display.</string>
     <string name="section_status">Status</string>
     <string name="section_light">Light</string>
+    <string name="section_notifications">Notifications</string>
     <string name="setting_style">Style</string>
     <string name="setting_animation">Animation</string>
     <string name="anim_off">Off</string>
@@ -63,7 +64,7 @@
     <string name="colour_low_contrast">Hard to see on the always-on display</string>
     <string name="about">About</string>
     <string name="about_version">Version %1$s</string>
-    <string name="about_links">Source code: https://github.com/7Ds7/AODLed\n\nWebsite: https://binaryunit.com</string>
+    <string name="about_links">Source code: https://github.com/7Ds7/AODLed\n\nhttps://binaryunit.com</string>
     <string name="close">Close</string>
     <string name="enabled">Enabled</string>
     <!-- Keeps the visible label in the name, so voice control can still say "tap Enabled" -->
@@ -71,6 +72,12 @@
     <string name="test_notification">Send test notification</string>
     <string name="test_sent">Test notification sent. Lock the screen to see the light.</string>
     <string name="help">Help</string>
+    <string name="help_status_description">Status help</string>
+    <string name="help_filter_description">Filter help</string>
+    <string name="help_light_off_description">Light off help</string>
+    <string name="help_respect_dnd_description">Do Not Disturb help</string>
+    <!-- Spoken name of an option button, e.g. "Animation: Off", so it makes sense when reached on its own -->
+    <string name="option_description">%1$s: %2$s</string>
     <string name="help_status">AODLed needs all of these turned on to work. Tap any that\'s off to fix it.</string>
     <string name="help_filter"><b>All:</b> every app turns the light on. Silent and ongoing notifications, like music, downloads or navigation, never do.\n\n<b>Allow list:</b> only the apps you check turn it on. New apps stay off until you check them.\n\n<b>Ignore list:</b> every app turns it on except the ones you check.\n\nApps from Private Space or a work profile appear in the list after their first notification.\n\nThe test notification always turns the light on.</string>
     <string name="help_light_off"><b>When dismissed:</b> the light stays on until you clear the notification.\n\n<b>On unlock:</b> the light goes off as soon as you unlock the phone, even if the notification is still there. It comes back with the next new notification.</string>

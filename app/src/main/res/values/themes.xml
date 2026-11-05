@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AODLed" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.AODLed" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="actionOverflowButtonStyle">@style/AODLed.Overflow</item>
+    </style>
+
+    <!-- The stock overflow button is 40dp wide, under the 48dp touch target -->
+    <style name="AODLed.Overflow" parent="Widget.AppCompat.Light.ActionButton.Overflow">
+        <item name="android:minWidth">48dp</item>
+    </style>
 
     <style name="AODLed.SectionHeader" parent="">
         <item name="android:layout_width">wrap_content</item>
@@ -9,6 +16,7 @@
         <item name="android:layout_marginBottom">8dp</item>
         <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
         <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="android:accessibilityHeading">true</item>
     </style>
 
     <style name="AODLed.SettingLabel" parent="">

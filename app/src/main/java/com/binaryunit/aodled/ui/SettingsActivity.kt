@@ -129,6 +129,16 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<View>(R.id.filter_all).setOnClickListener { save(cfg.copy(filterMode = FilterMode.ALL)) }
         findViewById<View>(R.id.filter_allow).setOnClickListener { editFilterList(FilterMode.ALLOW) }
         findViewById<View>(R.id.filter_ignore).setOnClickListener { editFilterList(FilterMode.IGNORE) }
+        // Spoken as "Animation: Off", so an option makes sense when reached by touch rather than after its label
+        mapOf(
+            R.id.animation_group to R.string.setting_animation, R.id.colour_group to R.string.setting_colour,
+            R.id.filter_group to R.string.setting_filter, R.id.light_off_group to R.string.setting_light_off,
+            R.id.dnd_group to R.string.setting_respect_dnd,
+        ).forEach { (group, label) ->
+            findViewById<ViewGroup>(group).children.forEach {
+                it.contentDescription = getString(R.string.option_description, getString(label), (it as Button).text)
+            }
+        }
         buildPalette()
 
         findViewById<View>(R.id.adjust).setOnClickListener { startActivity(Intent(this, EditorActivity::class.java)) }
