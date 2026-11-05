@@ -88,7 +88,7 @@ class OverlayService : AccessibilityService() {
         val old = cfg
         cfg = prefs.load()
         if (cfg.placementDiffers(old)) controller.placementChanged()
-        controller.refresh()
+        if (cfg.enabled != old.enabled) evaluate() else controller.refresh()
     }
 
     private val scheduler = object : Scheduler {
@@ -169,7 +169,8 @@ class OverlayService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
 
-    private fun evaluate() = controller.screen(pm.isInteractive)
+    // Off counts as awake: the cover stays down and the system AOD shows as if AODLed weren't there
+    private fun evaluate() = controller.screen(pm.isInteractive || !cfg.enabled)
 
     private fun layoutParams(): WindowManager.LayoutParams {
         val bounds = wm.maximumWindowMetrics.bounds

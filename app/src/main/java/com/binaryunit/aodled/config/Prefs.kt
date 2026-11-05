@@ -11,6 +11,7 @@ class Prefs(context: Context) {
     fun load(): LightConfig {
         val d = LightConfig()
         return LightConfig(
+            enabled = prefs.getBoolean(KEY_ENABLED, d.enabled),
             style = enumOr(KEY_STYLE, d.style),
             animation = enumOr(KEY_ANIMATION, d.animation),
             pulse = Pulse(
@@ -43,6 +44,7 @@ class Prefs(context: Context) {
 
     fun save(c: LightConfig) {
         prefs.edit().apply {
+            putBoolean(KEY_ENABLED, c.enabled)
             putString(KEY_STYLE, c.style.name)
             putString(KEY_ANIMATION, c.animation.name)
             putLong(KEY_PULSE_PERIOD, c.pulse.periodMs)
@@ -90,6 +92,7 @@ class Prefs(context: Context) {
         prefs.getString(key, null)?.let { name -> enumValues<T>().firstOrNull { it.name == name } } ?: default
 
     private companion object {
+        const val KEY_ENABLED = "enabled"
         const val KEY_STYLE = "style"
         const val KEY_ANIMATION = "animation"
         const val KEY_PULSE_PERIOD = "pulse_period"

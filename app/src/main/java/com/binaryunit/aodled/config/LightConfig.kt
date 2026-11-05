@@ -24,6 +24,8 @@ fun Pulse.flashesFast(): Boolean = periodMs * 3 < 1000
 
 /** A null placement means "use the default derived from the camera cutout". */
 data class LightConfig(
+    // Off keeps the cover down; notifications are still tracked, so switching on shows the ones pending
+    val enabled: Boolean = true,
     val style: Style = Style.RING,
     val animation: Animation = Animation.OFF,
     val pulse: Pulse = Pulse(),

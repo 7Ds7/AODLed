@@ -10,7 +10,17 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="@string/app_name" />
+        app:title="@string/app_name">
+
+        <!-- Laid out before the title, so on a narrow screen with large text the title is what gets cut short -->
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/enabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:contentDescription="@string/enabled_description"
+            android:text="@string/enabled" />
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -58,6 +68,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
         </com.google.android.material.card.MaterialCardView>
+
+    <!-- Greyed out while AODLed is off -->
+    <LinearLayout
+        android:id="@+id/light_settings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <TextView
             style="@style/AODLed.SectionHeader"
@@ -325,6 +342,7 @@
             android:layout_marginBottom="24dp"
             android:text="@string/test_notification" />
 
+    </LinearLayout>
     </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

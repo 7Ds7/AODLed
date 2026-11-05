@@ -15,6 +15,7 @@ import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -23,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.children
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import com.binaryunit.aodled.R
@@ -48,6 +50,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.Slider
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -59,6 +62,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var cfg: LightConfig
     private lateinit var statusRows: LinearLayout
+    private lateinit var enabledSwitch: MaterialSwitch
+    private lateinit var lightSettings: View
     private lateinit var palette: ChipGroup
     private lateinit var customChip: Chip
     private lateinit var styleField: TextInputLayout
@@ -102,7 +107,10 @@ class SettingsActivity : AppCompatActivity() {
         }
         prefs = Prefs(this)
         statusRows = findViewById(R.id.status_rows)
+        lightSettings = findViewById(R.id.light_settings)
         palette = findViewById(R.id.palette)
+        enabledSwitch = findViewById(R.id.enabled)
+        enabledSwitch.setOnCheckedChangeListener { _, on -> if (!binding) save(cfg.copy(enabled = on)) }
 
         findViewById<View>(R.id.help_status).setOnClickListener { showHelp(it, R.string.help_status) }
         findViewById<View>(R.id.help_filter).setOnClickListener { showHelp(it, R.string.help_filter, above = true) }
@@ -308,6 +316,8 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun syncControls() {
         binding = true
+        enabledSwitch.isChecked = cfg.enabled
+        setTreeEnabled(lightSettings, cfg.enabled)
         styleMenu.setText(getString(styleNames.getValue(cfg.style)), false)
         styleField.startIconDrawable = styleIcon(cfg.style)
         findViewById<MaterialButtonToggleGroup>(R.id.animation_group).check(animations.getValue(cfg.animation))
@@ -324,6 +334,13 @@ class SettingsActivity : AppCompatActivity() {
             else MaterialColors.getColor(customChip, com.google.android.material.R.attr.colorOnSurfaceVariant),
         )
         binding = false
+    }
+
+    /** Enables or disables [v] and everything in it; plain text and icons have no disabled look, so they fade. */
+    private fun setTreeEnabled(v: View, on: Boolean) {
+        v.isEnabled = on
+        if (v is ViewGroup) v.children.forEach { setTreeEnabled(it, on) }
+        else if (v !is Button && v !is EditText) v.alpha = if (on) 1f else DISABLED_ALPHA
     }
 
     private fun buildStatusRows() {
