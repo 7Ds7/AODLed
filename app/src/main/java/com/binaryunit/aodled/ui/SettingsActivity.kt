@@ -405,10 +405,13 @@ class SettingsActivity : AppCompatActivity() {
             Intent(action, Uri.parse("package:$packageName"))
         }
         // The toggle's page moves between versions (Lock screen on 12, Display itself on 16+); Display covers both
-        addStatusRow(R.string.status_aod, Status.aodEnabled(this)) { Intent(Settings.ACTION_DISPLAY_SETTINGS) }
+        addStatusRow(R.string.status_aod, Status.aodEnabled(this), R.string.status_aod_needed) {
+            Intent(Settings.ACTION_DISPLAY_SETTINGS)
+        }
     }
 
-    private fun addStatusRow(title: Int, ok: Boolean?, intent: () -> Intent) {
+    /** [unknownWarning] is a red line under the summary while [ok] is unknown. */
+    private fun addStatusRow(title: Int, ok: Boolean?, unknownWarning: Int? = null, intent: () -> Intent) {
         val row = layoutInflater.inflate(R.layout.item_status, statusRows, false)
         row.findViewById<TextView>(R.id.title).setText(title)
         row.findViewById<TextView>(R.id.summary).setText(
@@ -418,16 +421,16 @@ class SettingsActivity : AppCompatActivity() {
                 null -> R.string.status_unknown
             }
         )
+        if (ok == null && unknownWarning != null) row.findViewById<TextView>(R.id.warning).apply {
+            setText(unknownWarning)
+            visibility = View.VISIBLE
+        }
         row.findViewById<ImageView>(R.id.icon).apply {
-            setImageResource(if (ok == false) R.drawable.ic_status_missing else R.drawable.ic_status_ok)
+            setImageResource(if (ok == true) R.drawable.ic_status_ok else R.drawable.ic_status_missing)
             imageTintList = ColorStateList.valueOf(
                 MaterialColors.getColor(
                     this,
-                    when (ok) {
-                        true -> androidx.appcompat.R.attr.colorPrimary
-                        false -> androidx.appcompat.R.attr.colorError
-                        null -> com.google.android.material.R.attr.colorOnSurfaceVariant
-                    },
+                    if (ok == true) androidx.appcompat.R.attr.colorPrimary else androidx.appcompat.R.attr.colorError,
                 )
             )
         }
