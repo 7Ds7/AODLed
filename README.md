@@ -27,10 +27,12 @@
 
 ## Features
 
-- **Four styles:** a ring around the camera, a dot, an edge glow, or the cutout's own outline.
+- **Four styles:** a ring around the camera, a dot, an edge glow, or the cutout's own outline, with adjustable line thickness.
 - **Still or animated:** a pulse, a swirl, a line tracing the cutout, a comet along the edges, or a still light to save battery.
+- **Pulse your way:** blink length, blinks per burst, and a pause between bursts.
 - **App colours:** taken from each notification or app icon, or one colour of your choice.
-- **Only what matters:** silent, ongoing and Do Not Disturb notifications stay dark. Works with Private Space.
+- **Only what matters:** silent and ongoing notifications stay dark. Allow or Ignore lists pick which apps light it,
+  including Private Space apps. Respect Do Not Disturb or ignore it.
 - **Turns itself off:** when you dismiss the notification, or as soon as you unlock.
 - **Drag to place:** a full-screen editor that uses the same drawing code as the always-on display.
 - **Burn-in care:** the light moves a few pixels each time the screen turns off.
@@ -48,6 +50,8 @@ Pull requests are welcome, especially fixes and support for other phones. New fe
 so please open an issue to talk about one before you build it.
 
 ## Works on
+
+**Needs a phone with an always-on display**, usually one with an OLED screen.
 
 Pixel 10a with GrapheneOS (Android 17). Needs Android 12 or newer.
 
