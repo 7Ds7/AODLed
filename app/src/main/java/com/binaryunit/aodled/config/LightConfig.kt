@@ -39,6 +39,8 @@ data class LightConfig(
     val ringLineScale: Float = 1f,
     val cutoutLineScale: Float = 1f,
     val respectDnd: Boolean = true,
+    // Off: apps from Private Space or a work profile aren't remembered, so they can't go on a list
+    val includeOtherProfiles: Boolean = true,
     val filterMode: FilterMode = FilterMode.ALL,
     // Package names; each list is kept while the other mode is in use
     val allowList: Set<String> = emptySet(),
@@ -56,4 +58,12 @@ fun LightConfig.withFilterList(mode: FilterMode, picked: Set<String>): LightConf
     val next = if (picked.isNotEmpty()) mode else if (filterMode == mode) FilterMode.ALL else filterMode
     return if (mode == FilterMode.ALLOW) copy(filterMode = next, allowList = picked)
         else copy(filterMode = next, ignoreList = picked)
+}
+
+/** The config with [pkgs] taken off both lists; as on Done, if the list in use ends up empty the filter goes back to All. */
+fun LightConfig.withoutPackages(pkgs: Set<String>): LightConfig {
+    val allow = allowList - pkgs
+    val ignore = ignoreList - pkgs
+    val emptied = filterMode == FilterMode.ALLOW && allow.isEmpty() || filterMode == FilterMode.IGNORE && ignore.isEmpty()
+    return copy(filterMode = if (emptied) FilterMode.ALL else filterMode, allowList = allow, ignoreList = ignore)
 }

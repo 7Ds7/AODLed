@@ -83,8 +83,9 @@ class LightListenerService : NotificationListenerService() {
         val dndBlocked = ranked && !ranking.matchesInterruptionFilter()
         if (!qualifies(n.flags, importance, suspended, dndBlocked, cfg.respectDnd, sbn.packageName, n.channelId ?: "", packageName)) return null
         if (sbn.packageName != packageName) {
+            val own = sbn.user == Process.myUserHandle()
             // Recorded before filtering, so an app stays in the list after it's left out
-            seen.record(sbn.packageName, own = sbn.user == Process.myUserHandle())
+            if (own || cfg.includeOtherProfiles) seen.record(sbn.packageName, own)
             if (!passesFilter(sbn.packageName, cfg)) return null
         }
         return NotifInfo(sbn.key, sbn.postTime, n.`when`, colours.colourFor(sbn))

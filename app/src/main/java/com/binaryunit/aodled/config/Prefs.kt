@@ -35,6 +35,7 @@ class Prefs(context: Context) {
             ringLineScale = prefs.getFloat(KEY_RING_LINE, d.ringLineScale),
             cutoutLineScale = prefs.getFloat(KEY_CUTOUT_LINE, d.cutoutLineScale),
             respectDnd = prefs.getBoolean(KEY_RESPECT_DND, d.respectDnd),
+            includeOtherProfiles = prefs.getBoolean(KEY_OTHER_PROFILES, d.includeOtherProfiles),
             filterMode = enumOr(KEY_FILTER_MODE, d.filterMode),
             // getStringSet returns the stored instance, which must not be kept or modified
             allowList = prefs.getStringSet(KEY_ALLOW_LIST, null)?.toSet() ?: d.allowList,
@@ -72,6 +73,7 @@ class Prefs(context: Context) {
             putFloat(KEY_RING_LINE, c.ringLineScale)
             putFloat(KEY_CUTOUT_LINE, c.cutoutLineScale)
             putBoolean(KEY_RESPECT_DND, c.respectDnd)
+            putBoolean(KEY_OTHER_PROFILES, c.includeOtherProfiles)
             putString(KEY_FILTER_MODE, c.filterMode.name)
             if (c.allowList.isNotEmpty()) putStringSet(KEY_ALLOW_LIST, c.allowList) else remove(KEY_ALLOW_LIST)
             if (c.ignoreList.isNotEmpty()) putStringSet(KEY_IGNORE_LIST, c.ignoreList) else remove(KEY_IGNORE_LIST)
@@ -114,6 +116,7 @@ class Prefs(context: Context) {
         const val KEY_RING_LINE = "ring_line_scale"
         const val KEY_CUTOUT_LINE = "cutout_line_scale"
         const val KEY_RESPECT_DND = "respect_dnd"
+        const val KEY_OTHER_PROFILES = "include_other_profiles"
         const val KEY_FILTER_MODE = "filter_mode"
         const val KEY_ALLOW_LIST = "allow_list"
         const val KEY_IGNORE_LIST = "ignore_list"

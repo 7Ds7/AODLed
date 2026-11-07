@@ -3,6 +3,7 @@ package com.binaryunit.aodled
 import com.binaryunit.aodled.config.FilterMode
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.withFilterList
+import com.binaryunit.aodled.config.withoutPackages
 import com.binaryunit.aodled.notify.passesFilter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -53,4 +54,28 @@ class AppFilterTest {
 
     @Test fun `done with nothing checked on a list that never existed changes nothing`() =
         assertNull(allow.withFilterList(FilterMode.IGNORE, emptySet()))
+
+    @Test fun `leaving out other profiles takes their apps off both lists`() {
+        val c = LightConfig(
+            filterMode = FilterMode.ALLOW,
+            allowList = setOf("com.whatsapp", "org.thoughtcrime.securesms"),
+            ignoreList = setOf("com.whatsapp", "com.google.android.gm"),
+        ).withoutPackages(setOf("com.whatsapp"))
+        assertEquals(FilterMode.ALLOW, c.filterMode)
+        assertEquals(setOf("org.thoughtcrime.securesms"), c.allowList)
+        assertEquals(setOf("com.google.android.gm"), c.ignoreList)
+    }
+
+    @Test fun `leaving out other profiles empties the active list and goes back to all`() {
+        val c = allow.withoutPackages(setOf("com.whatsapp"))
+        assertEquals(FilterMode.ALL, c.filterMode)
+        assertEquals(emptySet<String>(), c.allowList)
+    }
+
+    @Test fun `leaving out other profiles keeps the active mode when only the inactive list empties`() {
+        val c = ignore.copy(ignoreList = setOf("com.google.android.gm"), allowList = setOf("com.whatsapp"))
+            .withoutPackages(setOf("com.whatsapp"))
+        assertEquals(FilterMode.IGNORE, c.filterMode)
+        assertEquals(emptySet<String>(), c.allowList)
+    }
 }

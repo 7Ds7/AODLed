@@ -40,8 +40,10 @@ import com.binaryunit.aodled.config.FilterMode
 import com.binaryunit.aodled.config.LightConfig
 import com.binaryunit.aodled.config.LightOff
 import com.binaryunit.aodled.config.Prefs
+import com.binaryunit.aodled.config.SeenApps
 import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.config.withFilterList
+import com.binaryunit.aodled.config.withoutPackages
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.service.LightListenerService
 import com.google.android.material.appbar.MaterialToolbar
@@ -63,6 +65,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var cfg: LightConfig
     private lateinit var statusRows: LinearLayout
     private lateinit var enabledSwitch: MaterialSwitch
+    private lateinit var otherProfilesSwitch: MaterialSwitch
     private lateinit var lightSettings: View
     private lateinit var palette: ChipGroup
     private lateinit var customChip: Chip
@@ -111,8 +114,14 @@ class SettingsActivity : AppCompatActivity() {
         palette = findViewById(R.id.palette)
         enabledSwitch = findViewById(R.id.enabled)
         enabledSwitch.setOnCheckedChangeListener { _, on -> if (!binding) save(cfg.copy(enabled = on)) }
+        otherProfilesSwitch = findViewById(R.id.other_profiles)
+        otherProfilesSwitch.setOnCheckedChangeListener { _, on ->
+            if (binding) return@setOnCheckedChangeListener
+            if (on) save(cfg.copy(includeOtherProfiles = true)) else leaveOutOtherProfiles()
+        }
 
         findViewById<View>(R.id.help_status).setOnClickListener { showHelp(it, R.string.help_status) }
+        findViewById<View>(R.id.help_other_profiles).setOnClickListener { showHelp(it, R.string.help_other_profiles, above = true) }
         findViewById<View>(R.id.help_filter).setOnClickListener { showHelp(it, R.string.help_filter, above = true) }
         findViewById<View>(R.id.help_light_off).setOnClickListener { showHelp(it, R.string.help_light_off, above = true) }
         findViewById<View>(R.id.help_respect_dnd).setOnClickListener { showHelp(it, R.string.help_respect_dnd, above = true) }
@@ -168,17 +177,41 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /** Opens [mode]'s list; Done saves it and switches to it, and a list saved empty is deleted. */
+    /** Opens [mode]'s list; Done saves it and switches to it, and a list saved empty is deleted, with an Undo. */
     private fun editFilterList(mode: FilterMode) {
         syncControls() // the tap checked this option; it waits for Done
-        showAppFilter(mode, if (mode == FilterMode.ALLOW) cfg.allowList else cfg.ignoreList) { picked ->
+        val before = cfg
+        showAppFilter(mode, if (mode == FilterMode.ALLOW) cfg.allowList else cfg.ignoreList, cfg.includeOtherProfiles) { picked ->
             save(cfg.withFilterList(mode, picked) ?: return@showAppFilter)
             if (picked.isEmpty()) Snackbar.make(
                 findViewById(R.id.root),
                 if (mode == FilterMode.ALLOW) R.string.filter_allow_deleted else R.string.filter_ignore_deleted,
                 Snackbar.LENGTH_LONG,
-            ).show()
+            ).setAction(R.string.undo) {
+                // The list comes back, and the filter as it was before
+                save(
+                    if (mode == FilterMode.ALLOW) cfg.copy(filterMode = before.filterMode, allowList = before.allowList)
+                    else cfg.copy(filterMode = before.filterMode, ignoreList = before.ignoreList)
+                )
+            }.show()
         }
+    }
+
+    /** Off forgets other profiles' apps and takes them off both lists; asks first when that changes a list. */
+    private fun leaveOutOtherProfiles() {
+        val listed = otherProfilePackages(cfg.allowList + cfg.ignoreList)
+        fun apply() {
+            save(cfg.copy(includeOtherProfiles = false).withoutPackages(listed))
+            SeenApps(this).forget(own = false)
+        }
+        if (listed.isEmpty()) return apply()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.other_profiles_off_title)
+            .setMessage(resources.getQuantityString(R.plurals.other_profiles_off_message, listed.size, listed.size))
+            .setPositiveButton(R.string.other_profiles_off) { _, _ -> apply() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setOnDismissListener { syncControls() } // Cancel turns the switch back on
+            .show()
     }
 
     /** Opens the pulse settings; Done saves them and switches to Pulse. */
@@ -334,6 +367,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButtonToggleGroup>(R.id.colour_group).check(colourModes.getValue(cfg.colourMode))
         findViewById<MaterialButtonToggleGroup>(R.id.light_off_group).check(lightOffs.getValue(cfg.lightOff))
         findViewById<MaterialButtonToggleGroup>(R.id.dnd_group).check(dndModes.getValue(cfg.respectDnd))
+        otherProfilesSwitch.isChecked = cfg.includeOtherProfiles
         findViewById<MaterialButtonToggleGroup>(R.id.filter_group).check(filterModes.getValue(cfg.filterMode))
         palette.visibility = if (cfg.colourMode == ColourMode.FIXED) View.VISIBLE else View.GONE
         val preset = (0 until palette.childCount).map { palette.getChildAt(it) as Chip }

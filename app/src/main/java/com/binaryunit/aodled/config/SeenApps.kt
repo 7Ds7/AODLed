@@ -18,5 +18,7 @@ class SeenApps(context: Context) {
         if (pkg !in seen) prefs.edit().putStringSet(key(own), seen + pkg).apply()
     }
 
+    fun forget(own: Boolean) = prefs.edit().remove(key(own)).apply()
+
     private fun key(own: Boolean) = if (own) "own" else "other"
 }

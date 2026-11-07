@@ -187,6 +187,39 @@
             android:layout_marginTop="24dp"
             android:text="@string/section_notifications" />
 
+        <!-- The label takes the spare width, so a long one wraps instead of pushing the switch off screen -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/AODLed.SettingLabel"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="0dp"
+                android:text="@string/setting_other_profiles" />
+            <ImageButton
+                android:id="@+id/help_other_profiles"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/actionBarItemBackground"
+                android:contentDescription="@string/help_other_profiles_description"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_help"
+                app:tint="?attr/colorOnSurfaceVariant" />
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/other_profiles"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@string/setting_other_profiles" />
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
