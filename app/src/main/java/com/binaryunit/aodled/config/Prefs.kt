@@ -14,10 +14,11 @@ class Prefs(context: Context) {
             enabled = prefs.getBoolean(KEY_ENABLED, d.enabled),
             style = enumOr(KEY_STYLE, d.style),
             animation = enumOr(KEY_ANIMATION, d.animation),
+            // A restored or edited file can hold values the controls never write; these would crash the pulse or editor
             pulse = Pulse(
-                prefs.getLong(KEY_PULSE_PERIOD, d.pulse.periodMs),
-                prefs.getInt(KEY_PULSE_BLINKS, d.pulse.blinks),
-                prefs.getLong(KEY_PULSE_PAUSE, d.pulse.pauseMs),
+                prefs.getLong(KEY_PULSE_PERIOD, d.pulse.periodMs).coerceAtLeast(PULSE_PERIODS.first()),
+                prefs.getInt(KEY_PULSE_BLINKS, d.pulse.blinks).coerceIn(1, 10),
+                prefs.getLong(KEY_PULSE_PAUSE, d.pulse.pauseMs).coerceAtLeast(0),
             ),
             colourMode = enumOr(KEY_COLOUR_MODE, d.colourMode),
             fixedColour = prefs.getInt(KEY_FIXED_COLOUR, d.fixedColour),
@@ -32,8 +33,8 @@ class Prefs(context: Context) {
                 prefs.getFloat(KEY_CUTOUT_CX, 0f), prefs.getFloat(KEY_CUTOUT_CY, 0f), prefs.getFloat(KEY_CUTOUT_SCALE, 1f)
             ) else null,
             edgeThickness = prefs.getFloat(KEY_EDGE, d.edgeThickness),
-            ringLineScale = prefs.getFloat(KEY_RING_LINE, d.ringLineScale),
-            cutoutLineScale = prefs.getFloat(KEY_CUTOUT_LINE, d.cutoutLineScale),
+            ringLineScale = lineScale(KEY_RING_LINE, d.ringLineScale),
+            cutoutLineScale = lineScale(KEY_CUTOUT_LINE, d.cutoutLineScale),
             respectDnd = prefs.getBoolean(KEY_RESPECT_DND, d.respectDnd),
             includeOtherProfiles = prefs.getBoolean(KEY_OTHER_PROFILES, d.includeOtherProfiles),
             filterMode = enumOr(KEY_FILTER_MODE, d.filterMode),
@@ -92,6 +93,10 @@ class Prefs(context: Context) {
 
     private inline fun <reified T : Enum<T>> enumOr(key: String, default: T): T =
         prefs.getString(key, null)?.let { name -> enumValues<T>().firstOrNull { it.name == name } } ?: default
+
+    // coerceIn keeps NaN, which the editor's slider also rejects
+    private fun lineScale(key: String, default: Float): Float =
+        prefs.getFloat(key, default).takeUnless { it.isNaN() }?.coerceIn(LINE_SCALE_MIN, LINE_SCALE_MAX) ?: default
 
     private companion object {
         const val KEY_ENABLED = "enabled"
