@@ -1,0 +1,11 @@
+- App filter: allow and ignore lists, incl. Private Space apps
+- Pulse: blink length, blinks per burst, pause between bursts
+- Enable/Disable switch
+- Line thickness for Ring and Cutout
+- Do Not Disturb: respect or ignore
+- Clearer status when the always-on display can't be read (LCD screens)
+
+- on unlock turns the light off again
+- animations let the CPU sleep when the display is off
+- motion animations no longer fill the GPU cache
+- settings from a backup can't crash the app
