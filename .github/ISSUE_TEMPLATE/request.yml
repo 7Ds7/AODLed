@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest something new, or a change to how AODLed works.
+title: "[Feature request] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Please use one issue per idea, and check the open issues first in case it's already there.
+        AODLed is meant to be a black screen with a small light, so ideas that bring back the phone's normal always-on display are out of scope.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Light style or placement
+        - Colours or animation
+        - Which notifications light
+        - Battery use
+        - Setup and permissions
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's missing or annoying today?
+      description: When does AODLed fall short for you?
+      placeholder: "Every app's notifications turn the light on, even ones I don't care about."
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like AODLed to do?
+      placeholder: "Let me choose which apps turn the light on."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Anything you've tried instead? (optional)
+      description: A workaround, a setting, or another app that does this.
+
+  - type: input
+    id: phone
+    attributes:
+      label: Phone model and Android version (optional)
+      description: Helps if the idea depends on your phone.
+      placeholder: "Pixel 10a, Android 17, GrapheneOS"
+
+  - type: dropdown
+    id: test
+    attributes:
+      label: Could you test a build on your phone? (optional)
+      options:
+        - "Yes"
+        - "No"

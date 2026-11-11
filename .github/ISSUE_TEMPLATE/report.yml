@@ -1,5 +1,6 @@
 name: Bug or device report
 description: Something doesn't work, or tell us how AODLed runs on your phone.
+title: "[Bug/Device report] "
 body:
   - type: markdown
     attributes:
