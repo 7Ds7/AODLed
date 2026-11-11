@@ -61,7 +61,8 @@ class GeometryTest {
     @Test fun `dot pinch grows from 1px and clamps`() {
         assertEquals(1.5f, DotPlacement(0f, 0f, 1f).pinched(1.5f).size, 0.001f)
         assertEquals(DOT_MIN, DotPlacement(0f, 0f, 1f).pinched(0.5f).size)
-        assertEquals(DOT_MAX, DotPlacement(0f, 0f, 20f).pinched(3f).size)
+        assertEquals(240f, DotPlacement(0f, 0f, 24f).pinched(10f).size, 0.001f)
+        assertEquals(600f, DotPlacement(0f, 0f, 500f).pinched(3f).size)
     }
 
     @Test fun `edge pinch clamps`() {

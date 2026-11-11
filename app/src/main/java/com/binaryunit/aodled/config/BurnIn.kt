@@ -12,9 +12,11 @@ data class Offset(val dx: Int, val dy: Int)
 object BurnIn {
     const val BASE_PX = 3
     const val INTERVAL_MS = 180_000L
+    /** Thickest Ring line (300 px radius × 0.08 × 3); also stops a big dot jumping across the screen. */
+    const val MAX_PX = 72
 
     /** At least the line's own [thickness], so a thick line's centre still goes dark about half the time. */
-    fun shift(thickness: Float): Int = maxOf(BASE_PX, ceil(thickness).toInt())
+    fun shift(thickness: Float): Int = ceil(thickness).toInt().coerceIn(BASE_PX, MAX_PX)
 
     fun next(rnd: Random, maxPx: Int): Offset = Offset(rnd.nextInt(-maxPx, maxPx + 1), rnd.nextInt(-maxPx, maxPx + 1))
 }

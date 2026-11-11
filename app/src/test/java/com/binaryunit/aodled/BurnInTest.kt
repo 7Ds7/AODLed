@@ -34,7 +34,10 @@ class BurnInTest {
     @Test fun `thick lines shift by at least their thickness`() {
         assertEquals(8, BurnIn.shift(7.2f))
         assertEquals(24, BurnIn.shift(24f))
+        assertEquals(72, BurnIn.shift(72f))
     }
+
+    @Test fun `a big dot's shift stays capped`() = assertEquals(BurnIn.MAX_PX, BurnIn.shift(600f))
 
     /** The shift is a whole number of px, so the centre of a line t wide is lit for |d| < t/2 of 2n+1 offsets. */
     @Test fun `a line's centre stays lit at most about half the time`() {
