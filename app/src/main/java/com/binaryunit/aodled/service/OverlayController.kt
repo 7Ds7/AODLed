@@ -20,6 +20,8 @@ enum class Light { OFF, STILL, ANIMATED }
 class OverlayController(
     private val host: Host,
     private val scheduler: Scheduler,
+    /** Real time in ms, deep sleep included (elapsedRealtime); the scheduler's delays count uptime, which stops then. */
+    private val now: () -> Long,
     private val nextOffset: () -> Offset,
 ) {
     interface Host {
@@ -33,6 +35,7 @@ class OverlayController(
     private var covered = false
     private var offset = Offset(0, 0)
     private var shiftArmed = false
+    private var armedAt = 0L
     private var exactNext = false
 
     private val hide = Runnable {
@@ -41,13 +44,7 @@ class OverlayController(
         covered = false
     }
 
-    private val burnIn = object : Runnable {
-        override fun run() {
-            shiftArmed = false
-            offset = nextOffset()
-            refresh()
-        }
-    }
+    private val burnIn = Runnable { shift() }
 
     private val frame = object : Runnable {
         override fun run() {
@@ -84,8 +81,17 @@ class OverlayController(
         if (!shiftArmed) {
             scheduler.post(burnIn, BurnIn.INTERVAL_MS)
             shiftArmed = true
+            armedAt = now()
         }
         if (light == Light.ANIMATED) scheduler.post(frame, 0)
+    }
+
+    /**
+     * Once a minute (TIME_TICK). A still light lets the CPU deep sleep, where the shift timer stands still, but the
+     * AOD's own clock updates still deliver the tick (Pixel, 2026-11-11), so shift here once its time has passed.
+     */
+    fun tick() {
+        if (shiftArmed && now() - armedAt >= BurnIn.INTERVAL_MS) shift()
     }
 
     /** The light's next showing is exactly where it was placed, so a new placement can be checked; shifts resume after. */
@@ -96,6 +102,13 @@ class OverlayController(
     fun stop() {
         scheduler.cancel(hide)
         hide.run()
+    }
+
+    private fun shift() {
+        scheduler.cancel(burnIn)
+        shiftArmed = false
+        offset = nextOffset()
+        refresh()
     }
 
     private fun stopLoops() {

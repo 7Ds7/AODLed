@@ -136,7 +136,7 @@ class OverlayService : AccessibilityService() {
         pm = getSystemService(PowerManager::class.java)
         prefs = Prefs(this)
         wake = DozeWake(this)
-        controller = OverlayController(host, scheduler) {
+        controller = OverlayController(host, scheduler, SystemClock::elapsedRealtime) {
             BurnIn.next(Random, BurnIn.shift(state(Offset(0, 0), null).lineThickness()))
         }
         cfg = prefs.load()
@@ -150,15 +150,22 @@ class OverlayService : AccessibilityService() {
         // Safe, all three actions are protected and only the system can send them. Android 12 has no flag.
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenReceiver, filter, RECEIVER_EXPORTED)
         else registerReceiver(screenReceiver, filter)
+        registerReceiver(tickReceiver, IntentFilter(Intent.ACTION_TIME_TICK))
         AppState.addListener(onStateChanged)
         prefs.onChange(onPrefsChanged)
         evaluate()
+    }
+
+    // Protected system broadcast, so no export flag is needed
+    private val tickReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = controller.tick()
     }
 
     override fun onDestroy() {
         if (::prefs.isInitialized) {
             dm.unregisterDisplayListener(displayListener)
             unregisterReceiver(screenReceiver)
+            unregisterReceiver(tickReceiver)
             AppState.removeListener(onStateChanged)
             prefs.removeOnChange(onPrefsChanged)
             controller.stop()

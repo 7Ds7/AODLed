@@ -10,13 +10,23 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Runs posted tasks in simulated time: [advance] fires everything due up to and including the new time. */
+/**
+ * Runs posted tasks in simulated time: [advance] fires everything due up to and including the new time. [sleep] is
+ * deep sleep: real time ([realNow]) moves on, but posted delays count uptime and stand still.
+ */
 private class FakeScheduler : Scheduler {
     private class Pending(val due: Long, val seq: Long, val task: Runnable)
 
     private val pending = mutableListOf<Pending>()
     private var seq = 0L
     private var now = 0L
+    private var slept = 0L
+
+    fun realNow() = now + slept
+
+    fun sleep(ms: Long) {
+        slept += ms
+    }
 
     override fun post(task: Runnable, delayMs: Long) {
         pending += Pending(now + delayMs, seq++, task)
@@ -53,7 +63,7 @@ class OverlayControllerTest {
     private val host = FakeHost()
     private val clock = FakeScheduler()
     private var offsets = 0
-    private val c = OverlayController(host, clock) { Offset(++offsets, 0) }   // offsets 1, 2, 3, …
+    private val c = OverlayController(host, clock, clock::realNow) { Offset(++offsets, 0) }   // offsets 1, 2, 3, …
 
     private fun draws() = host.events.filter { it.startsWith("draw") }
     private fun frames() = host.events.count { it == "frame" }
@@ -156,6 +166,36 @@ class OverlayControllerTest {
     @Test fun `no shift while nothing is lit`() {
         host.light = Light.OFF; c.screen(false); clock.advance(600_000)
         assertEquals(listOf("draw 1"), draws())
+    }
+
+    @Test fun `in deep sleep a tick shifts once 3 real minutes have passed`() {
+        host.light = Light.STILL; c.screen(false)
+        clock.sleep(179_999); c.tick()
+        assertEquals("draw 1", draws().last())
+        clock.sleep(1); c.tick()
+        assertEquals("draw 2", draws().last())
+        clock.sleep(60_000); c.tick()                                    // the 3 minutes start again
+        assertEquals("draw 2", draws().last())
+    }
+
+    @Test fun `a tick shift restarts the timer, so they never both shift`() {
+        host.light = Light.STILL; c.screen(false)
+        clock.advance(120_000); clock.sleep(60_000); c.tick()            // 3 real minutes, 2 of them awake
+        assertEquals("draw 2", draws().last())
+        clock.advance(179_999)
+        assertEquals("draw 2", draws().last())
+        clock.advance(1)
+        assertEquals("draw 3", draws().last())
+    }
+
+    @Test fun `no tick shift while nothing is lit`() {
+        host.light = Light.OFF; c.screen(false); clock.sleep(600_000); c.tick()
+        assertEquals(listOf("draw 1"), draws())
+    }
+
+    @Test fun `a tick with the cover down does nothing`() {
+        clock.sleep(600_000); c.tick()
+        assertTrue(host.events.isEmpty())
     }
 
     @Test fun `frames wait as long as the host asks`() {
