@@ -29,6 +29,16 @@
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
+    <!-- The editor's arrow and size buttons; weighted so all six fit on narrow screens -->
+    <style name="AODLed.NudgeButton" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginHorizontal">2dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">0dp</item>
+    </style>
+
     <!-- Always black and edge to edge, so placement matches the doze overlay exactly -->
     <style name="Theme.AODLed.Editor" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>

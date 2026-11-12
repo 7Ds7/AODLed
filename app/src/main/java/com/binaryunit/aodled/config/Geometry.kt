@@ -76,6 +76,16 @@ fun CutoutPlacement.grownBy(d: Float, halfSize: Float): Float = scale + d / half
 
 fun pinchedEdge(thickness: Float, f: Float): Float = (thickness * f).coerceIn(EDGE_MIN, EDGE_MAX)
 
+// The editor's − + buttons: a size change of [d] px within the same limits as a pinch
+fun RingPlacement.resized(d: Float) = copy(radius = (radius + d).coerceIn(RING_MIN_RADIUS, RING_MAX_RADIUS))
+
+fun DotPlacement.resized(d: Float) = copy(size = (size + d).coerceIn(DOT_MIN, DOT_MAX))
+
+fun CutoutPlacement.resized(d: Float, halfSize: Float) =
+    copy(scale = grownBy(d, halfSize).coerceIn(RING_MIN_RADIUS / halfSize, RING_MAX_RADIUS / halfSize))
+
+fun resizedEdge(thickness: Float, d: Float): Float = (thickness + d).coerceIn(EDGE_MIN, EDGE_MAX)
+
 /** True when what the editor sets (style, position, size, thickness) differs from [other]. */
 fun LightConfig.placementDiffers(other: LightConfig): Boolean = placement() != other.placement()
 

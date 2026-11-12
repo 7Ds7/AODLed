@@ -5,9 +5,12 @@ import android.graphics.Path
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
+import android.view.Gravity
 import android.view.ScaleGestureDetector
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.binaryunit.aodled.R
@@ -28,6 +31,8 @@ import com.binaryunit.aodled.config.moved
 import com.binaryunit.aodled.config.pinched
 import com.binaryunit.aodled.config.pinchedEdge
 import com.binaryunit.aodled.config.resetPlacement
+import com.binaryunit.aodled.config.resized
+import com.binaryunit.aodled.config.resizedEdge
 import com.binaryunit.aodled.render.LightState
 import com.binaryunit.aodled.render.LightView
 import com.binaryunit.aodled.render.box
@@ -39,13 +44,14 @@ import com.binaryunit.aodled.render.screenGeometry
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 
-/** Full-screen black placement editor. Done saves, Back discards. */
+/** Full-screen black placement editor. Done saves, Cancel and Back discard. */
 class EditorActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var light: LightView
     private lateinit var hint: TextView
     private lateinit var thicknessRow: View
     private lateinit var thickness: Slider
+    private lateinit var arrows: List<View>
     private lateinit var cfg: LightConfig
     private var width = 0
     private var height = 0
@@ -71,6 +77,12 @@ class EditorActivity : AppCompatActivity() {
             light.invalidate()
             light.postOnAnimation(this)
         }
+    }
+
+    private companion object {
+        const val REPEAT_START_MS = 100L
+        const val REPEAT_SPEEDUP_MS = 8L
+        const val REPEAT_MIN_MS = 20L
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -117,11 +129,26 @@ class EditorActivity : AppCompatActivity() {
             }
             render()
         }
-        findViewById<View>(R.id.help_burn_in).setOnClickListener { showHelp(it, R.string.help_burn_in, above = true) }
+        findViewById<View>(R.id.help_burn_in).setOnClickListener {
+            showHelp(it, R.string.help_burn_in, above = !prefs.editorPanelTop)
+        }
+        findViewById<View>(R.id.flip).setOnClickListener {
+            prefs.editorPanelTop = !prefs.editorPanelTop
+            placePanel()
+        }
+        placePanel()
+        repeating(R.id.nudge_left) { move(-1f, 0f) }
+        repeating(R.id.nudge_right) { move(1f, 0f) }
+        repeating(R.id.nudge_up) { move(0f, -1f) }
+        repeating(R.id.nudge_down) { move(0f, 1f) }
+        repeating(R.id.nudge_smaller) { resize(-1f) }
+        repeating(R.id.nudge_bigger) { resize(1f) }
+        arrows = listOf(R.id.nudge_left, R.id.nudge_right, R.id.nudge_up, R.id.nudge_down).map { findViewById(it) }
         findViewById<android.view.View>(R.id.reset).setOnClickListener {
             cfg = withDefaults(cfg.resetPlacement())
             render()
         }
+        findViewById<View>(R.id.cancel).setOnClickListener { finish() }
         findViewById<android.view.View>(R.id.done).setOnClickListener {
             prefs.save(cfg)
             finish()
@@ -179,6 +206,10 @@ class EditorActivity : AppCompatActivity() {
         val dx = e.x - lastX
         val dy = e.y - lastY
         lastX = e.x; lastY = e.y
+        move(dx, dy)
+    }
+
+    private fun move(dx: Float, dy: Float) {
         cfg = when (cfg.style) {
             Style.RING -> cfg.copy(ring = cfg.ring!!.moved(dx, dy, width, height))
             Style.DOT -> cfg.copy(dot = cfg.dot!!.moved(dx, dy, width, height))
@@ -186,6 +217,58 @@ class EditorActivity : AppCompatActivity() {
             Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.moved(dx, dy, width, height)) } ?: cfg
         }
         render()
+    }
+
+    private fun resize(d: Float) {
+        cfg = when (cfg.style) {
+            Style.RING -> cfg.copy(ring = cfg.ring!!.resized(d))
+            Style.DOT -> cfg.copy(dot = cfg.dot!!.resized(d))
+            Style.EDGES -> cfg.copy(edgeThickness = resizedEdge(cfg.edgeThickness, d))
+            Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.resized(d, cutoutHalf)) } ?: cfg
+        }
+        render()
+    }
+
+    /** A tap steps once; holding repeats after the long-press delay, speeding up the longer it's held. */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun repeating(id: Int, step: () -> Unit) {
+        val button = findViewById<View>(id)
+        val repeat = object : Runnable {
+            var count = 0
+            override fun run() {
+                step()
+                count++
+                button.postDelayed(this, maxOf(REPEAT_MIN_MS, REPEAT_START_MS - REPEAT_SPEEDUP_MS * count))
+            }
+        }
+        button.setOnClickListener { step() }
+        button.setOnLongClickListener {
+            repeat.count = 0
+            repeat.run()
+            true
+        }
+        button.setOnTouchListener { _, e ->
+            if (e.actionMasked == MotionEvent.ACTION_UP || e.actionMasked == MotionEvent.ACTION_CANCEL) {
+                button.removeCallbacks(repeat)
+            }
+            false
+        }
+    }
+
+    private fun placePanel() {
+        val top = prefs.editorPanelTop
+        val bar = findViewById<View>(R.id.bar)
+        val margin = (32 * resources.displayMetrics.density).toInt()
+        bar.layoutParams = (bar.layoutParams as FrameLayout.LayoutParams).apply {
+            gravity = if (top) Gravity.TOP else Gravity.BOTTOM
+            topMargin = if (top) margin else 0
+            bottomMargin = if (top) 0 else margin
+        }
+        // The icon shows where the panel will go
+        findViewById<ImageButton>(R.id.flip).apply {
+            setImageResource(if (top) R.drawable.ic_panel_bottom else R.drawable.ic_panel_top)
+            contentDescription = getString(if (top) R.string.panel_to_bottom else R.string.panel_to_top)
+        }
     }
 
     private fun render() {
@@ -197,6 +280,8 @@ class EditorActivity : AppCompatActivity() {
             Style.DOT, Style.EDGES -> null
         }
         thicknessRow.visibility = if (lineScale != null) View.VISIBLE else View.GONE
+        // Edges hug the screen edge, so there's nothing to move; − + still change their thickness
+        arrows.forEach { it.isEnabled = cfg.style != Style.EDGES }
         if (lineScale != null) thickness.value = lineScale
         val colour = if (cfg.colourMode == ColourMode.FIXED) cfg.fixedColour else Palette.WHITE
         light.state = LightState(

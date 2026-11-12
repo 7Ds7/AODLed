@@ -38,6 +38,16 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <ImageButton
+                android:id="@+id/flip"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/actionBarItemBackground"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_panel_top"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <ImageButton
                 android:id="@+id/help_burn_in"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
@@ -47,6 +57,60 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_help"
                 app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!-- 1 px nudges in pairs, each lowering then raising a number: X, Y, size -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/nudge_left"
+                style="@style/AODLed.NudgeButton"
+                android:contentDescription="@string/nudge_left"
+                app:icon="@drawable/ic_left" />
+
+            <Button
+                android:id="@+id/nudge_right"
+                style="@style/AODLed.NudgeButton"
+                android:contentDescription="@string/nudge_right"
+                app:icon="@drawable/ic_right" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="0.5" />
+
+            <Button
+                android:id="@+id/nudge_up"
+                style="@style/AODLed.NudgeButton"
+                android:contentDescription="@string/nudge_up"
+                app:icon="@drawable/ic_up" />
+
+            <Button
+                android:id="@+id/nudge_down"
+                style="@style/AODLed.NudgeButton"
+                android:contentDescription="@string/nudge_down"
+                app:icon="@drawable/ic_down" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="0.5" />
+
+            <Button
+                android:id="@+id/nudge_smaller"
+                style="@style/AODLed.NudgeButton"
+                android:contentDescription="@string/nudge_smaller"
+                app:icon="@drawable/ic_smaller" />
+
+            <Button
+                android:id="@+id/nudge_bigger"
+                style="@style/AODLed.NudgeButton"
+                android:contentDescription="@string/nudge_bigger"
+                app:icon="@drawable/ic_bigger" />
         </LinearLayout>
 
         <LinearLayout
@@ -121,8 +185,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:gravity="end"
             android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/cancel"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@android:string/cancel" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
             <Button
                 android:id="@+id/reset"

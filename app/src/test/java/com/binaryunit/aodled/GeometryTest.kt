@@ -20,6 +20,8 @@ import com.binaryunit.aodled.config.pinched
 import com.binaryunit.aodled.config.pinchedEdge
 import com.binaryunit.aodled.config.placementDiffers
 import com.binaryunit.aodled.config.resetPlacement
+import com.binaryunit.aodled.config.resized
+import com.binaryunit.aodled.config.resizedEdge
 import com.binaryunit.aodled.config.lineThickness
 import com.binaryunit.aodled.config.ringThickness
 import org.junit.Assert.assertEquals
@@ -107,6 +109,30 @@ class GeometryTest {
 
     @Test fun `cutout move keeps centre on screen`() =
         assertEquals(CutoutPlacement(0f, 2424f, 1.2f), CutoutPlacement(10f, 2400f, 1.2f).moved(-50f, 50f, 1080, 2424))
+
+    @Test fun `ring resize steps the radius and clamps`() {
+        assertEquals(46f, RingPlacement(0f, 0f, 45f).resized(1f).radius)
+        assertEquals(RING_MAX_RADIUS, RingPlacement(0f, 0f, RING_MAX_RADIUS).resized(1f).radius)
+        assertEquals(RING_MIN_RADIUS, RingPlacement(0f, 0f, RING_MIN_RADIUS).resized(-1f).radius)
+    }
+
+    @Test fun `dot resize steps the size and clamps`() {
+        assertEquals(5f, DotPlacement(0f, 0f, 4f).resized(1f).size)
+        assertEquals(DOT_MAX, DotPlacement(0f, 0f, DOT_MAX).resized(1f).size)
+        assertEquals(DOT_MIN, DotPlacement(0f, 0f, DOT_MIN).resized(-1f).size)
+    }
+
+    @Test fun `cutout resize moves its edge and clamps on the scaled half size`() {
+        assertEquals(51f, 40f * CutoutPlacement(0f, 0f, 1.25f).resized(1f, 40f).scale, 0.001f)
+        assertEquals(RING_MAX_RADIUS, 40f * CutoutPlacement(0f, 0f, RING_MAX_RADIUS / 40f).resized(1f, 40f).scale, 0.001f)
+        assertEquals(RING_MIN_RADIUS, 40f * CutoutPlacement(0f, 0f, RING_MIN_RADIUS / 40f).resized(-1f, 40f).scale, 0.001f)
+    }
+
+    @Test fun `edge resize steps the thickness and clamps`() {
+        assertEquals(3f, resizedEdge(2f, 1f))
+        assertEquals(EDGE_MAX, resizedEdge(EDGE_MAX, 1f))
+        assertEquals(EDGE_MIN, resizedEdge(EDGE_MIN, -1f))
+    }
 }
 
 class ResetTest {

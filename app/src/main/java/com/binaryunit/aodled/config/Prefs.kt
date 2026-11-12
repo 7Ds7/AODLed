@@ -81,6 +81,11 @@ class Prefs(context: Context) {
         }.apply()
     }
 
+    /** Editor panel side; not part of the light, so it's kept even when the editor is cancelled. */
+    var editorPanelTop: Boolean
+        get() = prefs.getBoolean(KEY_EDITOR_PANEL_TOP, false)
+        set(value) = prefs.edit().putBoolean(KEY_EDITOR_PANEL_TOP, value).apply()
+
     fun onChange(cb: () -> Unit) {
         val l = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> cb() }
         listeners[cb] = l
@@ -125,5 +130,6 @@ class Prefs(context: Context) {
         const val KEY_FILTER_MODE = "filter_mode"
         const val KEY_ALLOW_LIST = "allow_list"
         const val KEY_IGNORE_LIST = "ignore_list"
+        const val KEY_EDITOR_PANEL_TOP = "editor_panel_top"
     }
 }
