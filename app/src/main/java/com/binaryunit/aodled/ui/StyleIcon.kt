@@ -17,6 +17,7 @@ class StyleIcon(private val style: Style, private val cutout: Path?, colour: Int
         strokeWidth = size / 12f
     }
     private val rect = RectF()
+    private val shapeRect = RectF()
     private val shape = Path()
     private val matrix = Matrix()
 
@@ -36,6 +37,30 @@ class StyleIcon(private val style: Style, private val cutout: Path?, colour: Int
                 val half = rect.height() * 0.3f // a portrait screen
                 rect.set(rect.centerX() - half, rect.top, rect.centerX() + half, rect.bottom)
                 canvas.drawRoundRect(rect, half * 0.4f, half * 0.4f, paint)
+            }
+            Style.RIPPLE -> {
+                // Three rings, fainter as they grow, like one frame of a burst
+                val alpha = paint.alpha
+                for ((f, a) in listOf(0.25f to 1f, 0.55f to 0.6f, 0.85f to 0.3f)) {
+                    paint.alpha = (alpha * a).toInt()
+                    canvas.drawCircle(rect.centerX(), rect.centerY(), r * f, paint)
+                }
+                paint.alpha = alpha
+            }
+            Style.RADAR -> {
+                // ((·)): a dot with three arcs each side, fainter as they grow
+                val alpha = paint.alpha
+                paint.style = Paint.Style.FILL
+                canvas.drawCircle(rect.centerX(), rect.centerY(), r * 0.12f, paint)
+                paint.style = Paint.Style.STROKE
+                paint.strokeCap = Paint.Cap.ROUND
+                for ((f, a) in listOf(0.35f to 1f, 0.6f to 0.6f, 0.85f to 0.3f)) {
+                    paint.alpha = (alpha * a).toInt()
+                    shapeRect.set(rect.centerX() - r * f, rect.centerY() - r * f, rect.centerX() + r * f, rect.centerY() + r * f)
+                    for (middle in listOf(0f, 180f)) canvas.drawArc(shapeRect, middle - 30f, 60f, false, paint)
+                }
+                paint.strokeCap = Paint.Cap.BUTT
+                paint.alpha = alpha
             }
             Style.CUTOUT -> {
                 if (cutout == null) return

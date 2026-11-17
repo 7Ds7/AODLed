@@ -8,6 +8,7 @@ import com.binaryunit.aodled.config.flashesFast
 import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.render.PULSE_DARK_MS
 import com.binaryunit.aodled.render.PULSE_PERIOD_MS
+import com.binaryunit.aodled.render.RIPPLE_PERIOD_MS
 import com.binaryunit.aodled.render.ROTATE_PERIOD_MS
 import com.binaryunit.aodled.render.FRAME_MS
 import com.binaryunit.aodled.render.animFrame
@@ -19,6 +20,13 @@ import com.binaryunit.aodled.render.glowRadius
 import com.binaryunit.aodled.render.pulseAlpha
 import com.binaryunit.aodled.render.pulseFor
 import com.binaryunit.aodled.render.pulseFrameDelay
+import com.binaryunit.aodled.render.RIPPLE_SPREAD
+import com.binaryunit.aodled.render.rippleRadius
+import com.binaryunit.aodled.render.rippleWaves
+import com.binaryunit.aodled.render.RADAR_PERIOD_MS
+import com.binaryunit.aodled.render.RADAR_SPREAD
+import com.binaryunit.aodled.render.radarRadius
+import com.binaryunit.aodled.render.radarWaves
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -30,6 +38,58 @@ class AnimationTest {
         assertEquals(Animation.MOTION, effectiveAnimation(Style.RING, Animation.MOTION))
         assertEquals(Animation.MOTION, effectiveAnimation(Style.EDGES, Animation.MOTION))
         assertEquals(Animation.OFF, effectiveAnimation(Style.DOT, Animation.OFF))
+    }
+
+    @Test fun `ripple is always in motion`() {
+        for (a in Animation.entries) assertEquals(Animation.MOTION, effectiveAnimation(Style.RIPPLE, a))
+    }
+
+    @Test fun `ripple rings are born small at full brightness, then grow and fade`() {
+        val first = rippleWaves(0).single()
+        assertEquals(0f, first.growth, 0.001f)
+        assertEquals(1f, first.alpha, 0.001f)
+        val later = rippleWaves(700)
+        assertTrue(later.size >= 2)
+        assertTrue(later.zipWithNext().all { (old, young) -> old.growth > young.growth && old.alpha < young.alpha })
+    }
+
+    @Test fun `ripple rings go from the first ring out to the spread, so every size looks the same`() {
+        assertEquals(40f, rippleRadius(40f, 0f), 0.001f)
+        assertEquals(40f * RIPPLE_SPREAD, rippleRadius(40f, 1f), 0.001f)
+        assertEquals(rippleRadius(40f, 0.5f) * 3, rippleRadius(120f, 0.5f), 0.001f)
+    }
+
+    @Test fun `ripple is dark during the pause and starts again after it`() {
+        assertTrue(rippleWaves(RIPPLE_PERIOD_MS - 1).isEmpty())
+        assertEquals(1f, rippleWaves(RIPPLE_PERIOD_MS).single().alpha, 0.001f)
+    }
+
+    @Test fun `radar is always in motion`() {
+        for (a in Animation.entries) assertEquals(Animation.MOTION, effectiveAnimation(Style.RADAR, a))
+    }
+
+    @Test fun `radar keeps the owner's timing`() {
+        assertEquals(1995L, RADAR_PERIOD_MS)
+    }
+
+    @Test fun `radar arcs are born small at full brightness, then grow and fade`() {
+        val first = radarWaves(0).single()
+        assertEquals(0f, first.growth, 0.001f)
+        assertEquals(1f, first.alpha, 0.001f)
+        val later = radarWaves(500)
+        assertTrue(later.size >= 2)
+        assertTrue(later.zipWithNext().all { (old, young) -> old.growth > young.growth && old.alpha < young.alpha })
+    }
+
+    @Test fun `radar arcs go from the first arc out to the spread, so every size looks the same`() {
+        assertEquals(40f, radarRadius(40f, 0f), 0.001f)
+        assertEquals(40f * RADAR_SPREAD, radarRadius(40f, 1f), 0.001f)
+        assertEquals(radarRadius(40f, 0.5f) * 3, radarRadius(120f, 0.5f), 0.001f)
+    }
+
+    @Test fun `radar is dark during the pause and starts again after it`() {
+        assertTrue(radarWaves(RADAR_PERIOD_MS - 1).isEmpty())
+        assertEquals(1f, radarWaves(RADAR_PERIOD_MS).single().alpha, 0.001f)
     }
 
     @Test fun `pulse fades fully out, holds black, fades back`() {

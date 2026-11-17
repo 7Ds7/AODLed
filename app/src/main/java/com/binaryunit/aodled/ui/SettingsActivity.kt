@@ -14,7 +14,6 @@ import android.provider.Settings
 import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -55,8 +54,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.Slider
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import com.google.android.material.textfield.TextInputLayout
 
 internal const val DISABLED_ALPHA = 0.38f // Material's opacity for disabled content
 
@@ -69,15 +66,10 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var lightSettings: View
     private lateinit var palette: ChipGroup
     private lateinit var customChip: Chip
-    private lateinit var styleField: TextInputLayout
-    private lateinit var styleMenu: MaterialAutoCompleteTextView
+    private lateinit var styleMenu: StyleMenu
     private var cutout: Path? = null
     private var binding = false // true while syncing controls from cfg, so listeners don't save
 
-    private val styleNames = mapOf(
-        Style.RING to R.string.style_ring, Style.DOT to R.string.style_dot,
-        Style.EDGES to R.string.style_edges, Style.CUTOUT to R.string.style_cutout,
-    )
     private val animations = mapOf(Animation.OFF to R.id.anim_off, Animation.PULSE to R.id.anim_pulse, Animation.MOTION to R.id.anim_motion)
     private val colourModes = mapOf(ColourMode.APP to R.id.colour_app, ColourMode.FIXED to R.id.colour_fixed)
     private val lightOffs = mapOf(LightOff.ON_DISMISS to R.id.off_dismiss, LightOff.ON_UNLOCK to R.id.off_unlock)
@@ -240,32 +232,11 @@ class SettingsActivity : AppCompatActivity() {
         dialog.findViewById<TextView>(android.R.id.message)?.let { Linkify.addLinks(it, Linkify.WEB_URLS) }
     }
 
-    /** Style dropdown: each entry shows the style's shape; Cutout is greyed out without a camera cutout. */
     private fun buildStyleMenu() {
-        styleField = findViewById(R.id.style_field)
-        styleMenu = findViewById(R.id.style_menu)
-        styleMenu.setAdapter(object : ArrayAdapter<Style>(this, R.layout.item_style, R.id.name, Style.entries) {
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
-                super.getView(position, convertView, parent).apply {
-                    val style = Style.entries[position]
-                    findViewById<TextView>(R.id.name).setText(styleNames.getValue(style))
-                    findViewById<ImageView>(R.id.icon).setImageDrawable(styleIcon(style))
-                    alpha = if (isEnabled(position)) 1f else DISABLED_ALPHA
-                }
-
-            override fun areAllItemsEnabled() = cutout != null
-            override fun isEnabled(position: Int) = Style.entries[position] != Style.CUTOUT || cutout != null
-        })
-        styleMenu.setOnItemClickListener { _, _, position, _ ->
-            if (!binding) save(cfg.copy(style = Style.entries[position]))
+        styleMenu = StyleMenu(findViewById(R.id.style_field), findViewById(R.id.style_menu), cutout) {
+            if (!binding) save(cfg.copy(style = it))
         }
     }
-
-    private fun styleIcon(style: Style) = StyleIcon(
-        style, cutout,
-        MaterialColors.getColor(styleMenu, com.google.android.material.R.attr.colorOnSurfaceVariant),
-        (24 * resources.displayMetrics.density).toInt(),
-    )
 
     private fun buildPalette() {
         val names = resources.getStringArray(R.array.palette_names)
@@ -361,9 +332,12 @@ class SettingsActivity : AppCompatActivity() {
         binding = true
         enabledSwitch.isChecked = cfg.enabled
         setTreeEnabled(lightSettings, cfg.enabled)
-        styleMenu.setText(getString(styleNames.getValue(cfg.style)), false)
-        styleField.startIconDrawable = styleIcon(cfg.style)
-        findViewById<MaterialButtonToggleGroup>(R.id.animation_group).check(animations.getValue(cfg.animation))
+        styleMenu.show(cfg.style)
+        // Ripple and Radar only exist in motion: Motion shows as chosen and Off and Pulse can't be picked
+        val motionOnly = cfg.style == Style.RIPPLE || cfg.style == Style.RADAR
+        findViewById<MaterialButtonToggleGroup>(R.id.animation_group)
+            .check(animations.getValue(if (motionOnly) Animation.MOTION else cfg.animation))
+        if (motionOnly) listOf(R.id.anim_off, R.id.anim_pulse).forEach { findViewById<View>(it).isEnabled = false }
         findViewById<MaterialButtonToggleGroup>(R.id.colour_group).check(colourModes.getValue(cfg.colourMode))
         findViewById<MaterialButtonToggleGroup>(R.id.light_off_group).check(lightOffs.getValue(cfg.lightOff))
         findViewById<MaterialButtonToggleGroup>(R.id.dnd_group).check(dndModes.getValue(cfg.respectDnd))

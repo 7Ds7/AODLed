@@ -1,6 +1,6 @@
 package com.binaryunit.aodled.config
 
-enum class Style { RING, DOT, EDGES, CUTOUT }
+enum class Style { RING, RIPPLE, RADAR, DOT, EDGES, CUTOUT }
 enum class Animation { OFF, PULSE, MOTION }
 enum class ColourMode { APP, FIXED }
 enum class LightOff { ON_DISMISS, ON_UNLOCK }
@@ -33,10 +33,15 @@ data class LightConfig(
     val fixedColour: Int = 0xFFFFFFFF.toInt(),
     val lightOff: LightOff = LightOff.ON_DISMISS,
     val ring: RingPlacement? = null,
+    // Ripple and Radar keep their own circle, so placing one never moves the others
+    val ripple: RingPlacement? = null,
+    val radar: RingPlacement? = null,
     val dot: DotPlacement? = null,
     val cutout: CutoutPlacement? = null,
     val edgeThickness: Float = EDGE_DEFAULT,
     val ringLineScale: Float = 1f,
+    val rippleLineScale: Float = 1f,
+    val radarLineScale: Float = 1f,
     val cutoutLineScale: Float = 1f,
     val respectDnd: Boolean = true,
     // Off: apps from Private Space or a work profile aren't remembered, so they can't go on a list

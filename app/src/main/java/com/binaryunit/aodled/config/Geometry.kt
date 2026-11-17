@@ -29,6 +29,40 @@ fun defaultRing(cutout: Box?, screenWidth: Int): RingPlacement {
     return RingPlacement(cutout.centreX, cutout.centreY, size / 2 + RING_GAP)
 }
 
+/**
+ * Ripple's and Radar's first circle: centred on the hole's real outline ([hole], the cutout path's bounds), its line
+ * starting right on the hole's edge. Never Android's cutout rectangle, which runs up to the screen's top edge.
+ */
+fun defaultBurst(hole: Box?, screenWidth: Int): RingPlacement {
+    if (hole == null) return defaultRing(null, screenWidth)
+    val size = maxOf(hole.right - hole.left, hole.bottom - hole.top)
+    return RingPlacement(hole.centreX, hole.centreY, size / 2 / (1 - RING_THICKNESS_RATIO / 2))
+}
+
+fun defaultCircle(style: Style, cutout: Box?, hole: Box?, screenWidth: Int): RingPlacement = when (style) {
+    Style.RIPPLE, Style.RADAR -> defaultBurst(hole, screenWidth)
+    else -> defaultRing(cutout, screenWidth)
+}
+
+/** The circle the current style draws: Ripple and Radar keep their own, everything else uses the ring. */
+fun LightConfig.circle(): RingPlacement? = when (style) {
+    Style.RIPPLE -> ripple
+    Style.RADAR -> radar
+    else -> ring
+}
+
+fun LightConfig.circleLineScale(): Float = when (style) {
+    Style.RIPPLE -> rippleLineScale
+    Style.RADAR -> radarLineScale
+    else -> ringLineScale
+}
+
+fun LightConfig.withCircle(placement: RingPlacement?, lineScale: Float = circleLineScale()): LightConfig = when (style) {
+    Style.RIPPLE -> copy(ripple = placement, rippleLineScale = lineScale)
+    Style.RADAR -> copy(radar = placement, radarLineScale = lineScale)
+    else -> copy(ring = placement, ringLineScale = lineScale)
+}
+
 fun defaultDot(cutout: Box?, screenWidth: Int): DotPlacement {
     if (cutout == null) return DotPlacement(screenWidth / 2f, 124f, DOT_DEFAULT)
     return DotPlacement(cutout.centreX, cutout.bottom + DOT_GAP, DOT_DEFAULT)
@@ -44,10 +78,10 @@ fun defaultCutout(bounds: Box, halfSize: Float = bounds.halfSize): CutoutPlaceme
 /** [scale] is the editor's thickness slider, so resizing still scales the line. */
 fun ringThickness(radius: Float, scale: Float = 1f): Float = maxOf(1f, radius * RING_THICKNESS_RATIO * scale)
 
-/** Width of the lit line (a dot's size); without a hole, Cutout is drawn as the ring. */
+/** Width of the lit line (a dot's size); [ring] is the style's [circle]. Without a hole, Cutout is drawn as the ring. */
 fun LightConfig.lineThickness(ring: RingPlacement, dot: DotPlacement, cutout: CutoutPlacement?, cutoutHalf: Float): Float =
     when (style) {
-        Style.RING -> ringThickness(ring.radius, ringLineScale)
+        Style.RING, Style.RIPPLE, Style.RADAR -> ringThickness(ring.radius, circleLineScale())
         Style.DOT -> dot.size
         Style.EDGES -> edgeThickness
         Style.CUTOUT -> cutout?.let { ringThickness(cutoutHalf * it.scale, cutoutLineScale) }
@@ -89,11 +123,12 @@ fun resizedEdge(thickness: Float, d: Float): Float = (thickness + d).coerceIn(ED
 /** True when what the editor sets (style, position, size, thickness) differs from [other]. */
 fun LightConfig.placementDiffers(other: LightConfig): Boolean = placement() != other.placement()
 
-private fun LightConfig.placement() = listOf(style, ring, dot, cutout, edgeThickness, ringLineScale, cutoutLineScale)
+private fun LightConfig.placement() =
+    listOf(style, ring, ripple, radar, dot, cutout, edgeThickness, ringLineScale, rippleLineScale, radarLineScale, cutoutLineScale)
 
 /** Back to the default position/size for the current style only. */
 fun LightConfig.resetPlacement(): LightConfig = when (style) {
-    Style.RING -> copy(ring = null, ringLineScale = 1f)
+    Style.RING, Style.RIPPLE, Style.RADAR -> withCircle(null, 1f)
     Style.DOT -> copy(dot = null)
     Style.EDGES -> copy(edgeThickness = EDGE_DEFAULT)
     Style.CUTOUT -> copy(cutout = null, cutoutLineScale = 1f)

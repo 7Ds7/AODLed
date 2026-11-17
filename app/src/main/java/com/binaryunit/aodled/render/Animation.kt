@@ -20,9 +20,12 @@ const val GLOW_ALPHA = 0.7f
 const val AOD_GLOW_FACTOR = 1f
 const val AOD_GLOW_ALPHA = 1f
 
-/** A dot can't move along a path, so Motion falls back to pulse. */
-fun effectiveAnimation(style: Style, anim: Animation): Animation =
-    if (style == Style.DOT && anim == Animation.MOTION) Animation.PULSE else anim
+/** A dot can't move along a path, so Motion falls back to pulse; Ripple and Radar only exist in motion. */
+fun effectiveAnimation(style: Style, anim: Animation): Animation = when {
+    style == Style.RIPPLE || style == Style.RADAR -> Animation.MOTION
+    style == Style.DOT && anim == Animation.MOTION -> Animation.PULSE
+    else -> anim
+}
 
 /** The popup's settings for Pulse; a dot on Motion falls back to the original pulse. */
 fun pulseFor(cfg: LightConfig): Pulse = if (cfg.animation == Animation.PULSE) cfg.pulse else Pulse()

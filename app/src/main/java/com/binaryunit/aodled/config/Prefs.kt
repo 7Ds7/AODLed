@@ -26,6 +26,8 @@ class Prefs(context: Context) {
             ring = if (prefs.contains(KEY_RING_CX)) RingPlacement(
                 prefs.getFloat(KEY_RING_CX, 0f), prefs.getFloat(KEY_RING_CY, 0f), prefs.getFloat(KEY_RING_R, 0f)
             ) else null,
+            ripple = circle(KEY_RIPPLE_CX, KEY_RIPPLE_CY, KEY_RIPPLE_R),
+            radar = circle(KEY_RADAR_CX, KEY_RADAR_CY, KEY_RADAR_R),
             dot = if (prefs.contains(KEY_DOT_X)) DotPlacement(
                 prefs.getFloat(KEY_DOT_X, 0f), prefs.getFloat(KEY_DOT_Y, 0f), prefs.getFloat(KEY_DOT_SIZE, DOT_DEFAULT)
             ) else null,
@@ -34,6 +36,8 @@ class Prefs(context: Context) {
             ) else null,
             edgeThickness = prefs.getFloat(KEY_EDGE, d.edgeThickness),
             ringLineScale = lineScale(KEY_RING_LINE, d.ringLineScale),
+            rippleLineScale = lineScale(KEY_RIPPLE_LINE, d.rippleLineScale),
+            radarLineScale = lineScale(KEY_RADAR_LINE, d.radarLineScale),
             cutoutLineScale = lineScale(KEY_CUTOUT_LINE, d.cutoutLineScale),
             respectDnd = prefs.getBoolean(KEY_RESPECT_DND, d.respectDnd),
             includeOtherProfiles = prefs.getBoolean(KEY_OTHER_PROFILES, d.includeOtherProfiles),
@@ -60,6 +64,8 @@ class Prefs(context: Context) {
             } else {
                 remove(KEY_RING_CX); remove(KEY_RING_CY); remove(KEY_RING_R)
             }
+            putCircle(c.ripple, KEY_RIPPLE_CX, KEY_RIPPLE_CY, KEY_RIPPLE_R)
+            putCircle(c.radar, KEY_RADAR_CX, KEY_RADAR_CY, KEY_RADAR_R)
             if (c.dot != null) {
                 putFloat(KEY_DOT_X, c.dot.x); putFloat(KEY_DOT_Y, c.dot.y); putFloat(KEY_DOT_SIZE, c.dot.size)
             } else {
@@ -72,6 +78,8 @@ class Prefs(context: Context) {
             }
             putFloat(KEY_EDGE, c.edgeThickness)
             putFloat(KEY_RING_LINE, c.ringLineScale)
+            putFloat(KEY_RIPPLE_LINE, c.rippleLineScale)
+            putFloat(KEY_RADAR_LINE, c.radarLineScale)
             putFloat(KEY_CUTOUT_LINE, c.cutoutLineScale)
             putBoolean(KEY_RESPECT_DND, c.respectDnd)
             putBoolean(KEY_OTHER_PROFILES, c.includeOtherProfiles)
@@ -99,6 +107,17 @@ class Prefs(context: Context) {
     private inline fun <reified T : Enum<T>> enumOr(key: String, default: T): T =
         prefs.getString(key, null)?.let { name -> enumValues<T>().firstOrNull { it.name == name } } ?: default
 
+    private fun circle(cx: String, cy: String, r: String): RingPlacement? =
+        if (prefs.contains(cx)) RingPlacement(prefs.getFloat(cx, 0f), prefs.getFloat(cy, 0f), prefs.getFloat(r, 0f)) else null
+
+    private fun SharedPreferences.Editor.putCircle(p: RingPlacement?, cx: String, cy: String, r: String) {
+        if (p != null) {
+            putFloat(cx, p.cx); putFloat(cy, p.cy); putFloat(r, p.radius)
+        } else {
+            remove(cx); remove(cy); remove(r)
+        }
+    }
+
     // coerceIn keeps NaN, which the editor's slider also rejects
     private fun lineScale(key: String, default: Float): Float =
         prefs.getFloat(key, default).takeUnless { it.isNaN() }?.coerceIn(LINE_SCALE_MIN, LINE_SCALE_MAX) ?: default
@@ -116,6 +135,12 @@ class Prefs(context: Context) {
         const val KEY_RING_CX = "ring_cx"
         const val KEY_RING_CY = "ring_cy"
         const val KEY_RING_R = "ring_r"
+        const val KEY_RIPPLE_CX = "ripple_cx"
+        const val KEY_RIPPLE_CY = "ripple_cy"
+        const val KEY_RIPPLE_R = "ripple_r"
+        const val KEY_RADAR_CX = "radar_cx"
+        const val KEY_RADAR_CY = "radar_cy"
+        const val KEY_RADAR_R = "radar_r"
         const val KEY_DOT_X = "dot_x"
         const val KEY_DOT_Y = "dot_y"
         const val KEY_DOT_SIZE = "dot_size"
@@ -124,6 +149,8 @@ class Prefs(context: Context) {
         const val KEY_CUTOUT_SCALE = "cutout_scale"
         const val KEY_EDGE = "edge_thickness"
         const val KEY_RING_LINE = "ring_line_scale"
+        const val KEY_RIPPLE_LINE = "ripple_line_scale"
+        const val KEY_RADAR_LINE = "radar_line_scale"
         const val KEY_CUTOUT_LINE = "cutout_line_scale"
         const val KEY_RESPECT_DND = "respect_dnd"
         const val KEY_OTHER_PROFILES = "include_other_profiles"

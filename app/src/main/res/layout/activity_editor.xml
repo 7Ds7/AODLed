@@ -137,49 +137,19 @@
                 app:labelBehavior="gone" />
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/styles"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/style_field"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:selectionRequired="true"
-            app:singleSelection="true">
+            android:hint="@string/setting_style">
 
-            <Button
-                android:id="@+id/style_ring"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/style_menu"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingHorizontal="8dp"
-                android:text="@string/style_ring" />
-
-            <Button
-                android:id="@+id/style_dot"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingHorizontal="8dp"
-                android:text="@string/style_dot" />
-
-            <Button
-                android:id="@+id/style_edges"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingHorizontal="8dp"
-                android:text="@string/style_edges" />
-
-            <Button
-                android:id="@+id/style_cutout"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingHorizontal="8dp"
-                android:text="@string/style_cutout" />
-        </com.google.android.material.button.MaterialButtonToggleGroup>
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

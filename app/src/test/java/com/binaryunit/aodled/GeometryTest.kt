@@ -14,6 +14,13 @@ import com.binaryunit.aodled.config.RingPlacement
 import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
 import com.binaryunit.aodled.config.defaultRing
+import com.binaryunit.aodled.config.defaultBurst
+import com.binaryunit.aodled.config.defaultCircle
+import com.binaryunit.aodled.config.circle
+import com.binaryunit.aodled.config.circleLineScale
+import com.binaryunit.aodled.config.withCircle
+import com.binaryunit.aodled.config.LightConfig
+import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.config.grownBy
 import com.binaryunit.aodled.config.moved
 import com.binaryunit.aodled.config.pinched
@@ -35,6 +42,22 @@ class GeometryTest {
 
     @Test fun `default ring without cutout is top centre`() =
         assertEquals(540f, defaultRing(null, 1080).cx)
+
+    @Test fun `default burst centres on cutout with its line starting on the hole's edge`() {
+        val b = defaultBurst(cutout, 1080)
+        assertEquals(540f, b.cx); assertEquals(60f, b.cy)
+        assertEquals(40f, b.radius - ringThickness(b.radius) / 2, 0.001f)
+    }
+
+    @Test fun `ripple and radar start from the burst around the real hole, ring from the ring`() {
+        // Android's cutout rectangle runs up to the screen's top edge; the hole's outline is the real circle
+        val hole = Box(506f, 35f, 574f, 103f)
+        assertEquals(defaultRing(cutout, 1080), defaultCircle(Style.RING, cutout, hole, 1080))
+        assertEquals(defaultBurst(hole, 1080), defaultCircle(Style.RIPPLE, cutout, hole, 1080))
+        assertEquals(defaultBurst(hole, 1080), defaultCircle(Style.RADAR, cutout, hole, 1080))
+        // Never the rectangle: without an outline they start top centre
+        assertEquals(defaultBurst(null, 1080), defaultCircle(Style.RADAR, cutout, null, 1080))
+    }
 
     @Test fun `default dot sits below cutout at 4px`() =
         assertEquals(DotPlacement(540f, 124f, 4f), defaultDot(cutout, 1080))
@@ -157,6 +180,17 @@ class ResetTest {
         assertEquals(com.binaryunit.aodled.config.EDGE_DEFAULT, r.edgeThickness); assertEquals(placed.ring, r.ring)
     }
 
+    @Test fun `reset ripple or radar clears only its own circle`() {
+        val both = placed.copy(ripple = RingPlacement(7f, 8f, 20f), rippleLineScale = 1.5f,
+            radar = RingPlacement(9f, 10f, 15f), radarLineScale = 0.5f)
+        val ripple = both.copy(style = Style.RIPPLE).resetPlacement()
+        assertEquals(null, ripple.ripple); assertEquals(1f, ripple.rippleLineScale)
+        assertEquals(placed.ring, ripple.ring); assertEquals(2f, ripple.ringLineScale); assertEquals(both.radar, ripple.radar)
+        val radar = both.copy(style = Style.RADAR).resetPlacement()
+        assertEquals(null, radar.radar); assertEquals(1f, radar.radarLineScale)
+        assertEquals(placed.ring, radar.ring); assertEquals(both.ripple, radar.ripple); assertEquals(1.5f, radar.rippleLineScale)
+    }
+
     @Test fun `reset cutout clears only the cutout`() {
         val r = placed.copy(style = com.binaryunit.aodled.config.Style.CUTOUT).resetPlacement()
         assertEquals(null, r.cutout); assertEquals(placed.ring, r.ring); assertEquals(placed.dot, r.dot)
@@ -180,6 +214,35 @@ class LineThicknessTest {
         assertEquals(12f, of(com.binaryunit.aodled.config.Style.CUTOUT), 0.001f)    // 40 * 1.25 * 0.08 * 3
     @Test fun `cutout without a hole falls back to the ring`() =
         assertEquals(8f, of(com.binaryunit.aodled.config.Style.CUTOUT, c = null), 0.001f)
+    @Test fun `ripple and radar use their own scale`() {
+        val c = cfg.copy(rippleLineScale = 3f, radarLineScale = 0.5f)
+        assertEquals(12f, c.copy(style = Style.RIPPLE).lineThickness(ring, dot, cutout, 40f), 0.001f)
+        assertEquals(2f, c.copy(style = Style.RADAR).lineThickness(ring, dot, cutout, 40f), 0.001f)
+    }
+}
+
+class CircleTest {
+    private val ring = RingPlacement(1f, 2f, 30f)
+    private val ripple = RingPlacement(3f, 4f, 20f)
+    private val radar = RingPlacement(5f, 6f, 15f)
+    private val cfg = LightConfig(ring = ring, ripple = ripple, radar = radar,
+        ringLineScale = 2f, rippleLineScale = 1.5f, radarLineScale = 0.5f)
+
+    @Test fun `each circle style reads its own placement and line`() {
+        assertEquals(ring, cfg.copy(style = Style.RING).circle()); assertEquals(2f, cfg.copy(style = Style.RING).circleLineScale())
+        assertEquals(ripple, cfg.copy(style = Style.RIPPLE).circle()); assertEquals(1.5f, cfg.copy(style = Style.RIPPLE).circleLineScale())
+        assertEquals(radar, cfg.copy(style = Style.RADAR).circle()); assertEquals(0.5f, cfg.copy(style = Style.RADAR).circleLineScale())
+        // Cutout without a hole is drawn as the ring
+        assertEquals(ring, cfg.copy(style = Style.CUTOUT).circle())
+    }
+
+    @Test fun `changing one circle style leaves the others alone`() {
+        val moved = RingPlacement(9f, 9f, 9f)
+        val r = cfg.copy(style = Style.RIPPLE).withCircle(moved, 3f)
+        assertEquals(moved, r.ripple); assertEquals(3f, r.rippleLineScale)
+        assertEquals(ring, r.ring); assertEquals(2f, r.ringLineScale)
+        assertEquals(radar, r.radar); assertEquals(0.5f, r.radarLineScale)
+    }
 }
 
 class PlacementDiffersTest {
@@ -188,6 +251,8 @@ class PlacementDiffersTest {
     @Test fun `moving, resizing, thickness or style is a new placement`() {
         assertEquals(true, base.copy(ring = RingPlacement(1f, 2f, 31f)).placementDiffers(base))
         assertEquals(true, base.copy(ringLineScale = 2f).placementDiffers(base))
+        assertEquals(true, base.copy(ripple = RingPlacement(1f, 2f, 30f)).placementDiffers(base))
+        assertEquals(true, base.copy(radarLineScale = 2f).placementDiffers(base))
         assertEquals(true, base.copy(style = com.binaryunit.aodled.config.Style.DOT).placementDiffers(base))
     }
 

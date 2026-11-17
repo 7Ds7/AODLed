@@ -26,7 +26,11 @@ import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
+import com.binaryunit.aodled.config.circle
+import com.binaryunit.aodled.config.circleLineScale
+import com.binaryunit.aodled.config.defaultBurst
 import com.binaryunit.aodled.config.defaultRing
+import com.binaryunit.aodled.config.withCircle
 import com.binaryunit.aodled.config.moved
 import com.binaryunit.aodled.config.pinched
 import com.binaryunit.aodled.config.pinchedEdge
@@ -41,7 +45,6 @@ import com.binaryunit.aodled.render.cornerRadius
 import com.binaryunit.aodled.render.cutoutPath
 import com.binaryunit.aodled.render.effectiveAnimation
 import com.binaryunit.aodled.render.screenGeometry
-import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 
 /** Full-screen black placement editor. Done saves, Cancel and Back discard. */
@@ -63,13 +66,6 @@ class EditorActivity : AppCompatActivity() {
     private var lastX = Float.NaN
     private var lastY = Float.NaN
     private var animating = false
-
-    private val styleButtons = mapOf(
-        Style.RING to R.id.style_ring,
-        Style.DOT to R.id.style_dot,
-        Style.EDGES to R.id.style_edges,
-        Style.CUTOUT to R.id.style_cutout,
-    )
 
     private val tick = object : Runnable {
         override fun run() {
@@ -110,20 +106,18 @@ class EditorActivity : AppCompatActivity() {
         cornerRadius = cornerRadius()
         cfg = withDefaults(prefs.load())
 
-        val group = findViewById<MaterialButtonToggleGroup>(R.id.styles)
-        findViewById<android.view.View>(R.id.style_cutout).isEnabled = cutoutPath != null
-        group.check(styleButtons.getValue(cfg.style))
-        group.addOnButtonCheckedListener { _, id, checked ->
-            if (!checked) return@addOnButtonCheckedListener
-            cfg = cfg.copy(style = styleButtons.entries.first { it.value == id }.key)
+        // A dropdown, not a row of buttons: six style names don't fit across a phone at larger text sizes
+        val styles = StyleMenu(findViewById(R.id.style_field), findViewById(R.id.style_menu), cutoutPath) {
+            cfg = cfg.copy(style = it)
             render()
         }
+        styles.show(cfg.style)
         thickness.valueFrom = LINE_SCALE_MIN
         thickness.valueTo = LINE_SCALE_MAX
         thickness.addOnChangeListener { _, value, fromUser ->
             if (!fromUser) return@addOnChangeListener
             cfg = when (cfg.style) {
-                Style.RING -> cfg.copy(ringLineScale = value)
+                Style.RING, Style.RIPPLE, Style.RADAR -> cfg.withCircle(cfg.circle(), value)
                 Style.CUTOUT -> cfg.copy(cutoutLineScale = value)
                 Style.DOT, Style.EDGES -> cfg
             }
@@ -158,7 +152,7 @@ class EditorActivity : AppCompatActivity() {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
                 val f = detector.scaleFactor
                 cfg = when (cfg.style) {
-                    Style.RING -> cfg.copy(ring = cfg.ring!!.pinched(f))
+                    Style.RING, Style.RIPPLE, Style.RADAR -> cfg.withCircle(cfg.circle()!!.pinched(f))
                     Style.DOT -> cfg.copy(dot = cfg.dot!!.pinched(f))
                     Style.EDGES -> cfg.copy(edgeThickness = pinchedEdge(cfg.edgeThickness, f))
                     Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.pinched(f, cutoutHalf)) } ?: cfg
@@ -188,6 +182,8 @@ class EditorActivity : AppCompatActivity() {
     private fun withDefaults(c: LightConfig) =
         c.copy(
             ring = c.ring ?: defaultRing(cutout, width),
+            ripple = c.ripple ?: defaultBurst(cutoutBox, width),
+            radar = c.radar ?: defaultBurst(cutoutBox, width),
             dot = c.dot ?: defaultDot(cutout, width),
             cutout = c.cutout ?: cutoutBox?.let { defaultCutout(it, cutoutHalf) },
         )
@@ -211,7 +207,7 @@ class EditorActivity : AppCompatActivity() {
 
     private fun move(dx: Float, dy: Float) {
         cfg = when (cfg.style) {
-            Style.RING -> cfg.copy(ring = cfg.ring!!.moved(dx, dy, width, height))
+            Style.RING, Style.RIPPLE, Style.RADAR -> cfg.withCircle(cfg.circle()!!.moved(dx, dy, width, height))
             Style.DOT -> cfg.copy(dot = cfg.dot!!.moved(dx, dy, width, height))
             Style.EDGES -> cfg
             Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.moved(dx, dy, width, height)) } ?: cfg
@@ -221,7 +217,7 @@ class EditorActivity : AppCompatActivity() {
 
     private fun resize(d: Float) {
         cfg = when (cfg.style) {
-            Style.RING -> cfg.copy(ring = cfg.ring!!.resized(d))
+            Style.RING, Style.RIPPLE, Style.RADAR -> cfg.withCircle(cfg.circle()!!.resized(d))
             Style.DOT -> cfg.copy(dot = cfg.dot!!.resized(d))
             Style.EDGES -> cfg.copy(edgeThickness = resizedEdge(cfg.edgeThickness, d))
             Style.CUTOUT -> cfg.cutout?.let { cfg.copy(cutout = it.resized(d, cutoutHalf)) } ?: cfg
@@ -275,7 +271,7 @@ class EditorActivity : AppCompatActivity() {
         hint.setText(if (cfg.style == Style.EDGES) R.string.editor_hint_edges else R.string.editor_hint)
         // Dot is filled and Edges pinch their own thickness, so the slider is only for the outlines
         val lineScale = when (cfg.style) {
-            Style.RING -> cfg.ringLineScale
+            Style.RING, Style.RIPPLE, Style.RADAR -> cfg.circleLineScale()
             Style.CUTOUT -> cfg.cutoutLineScale
             Style.DOT, Style.EDGES -> null
         }
@@ -285,7 +281,7 @@ class EditorActivity : AppCompatActivity() {
         if (lineScale != null) thickness.value = lineScale
         val colour = if (cfg.colourMode == ColourMode.FIXED) cfg.fixedColour else Palette.WHITE
         light.state = LightState(
-            cfg, cfg.ring!!, cfg.dot!!, colour, Offset(0, 0), cornerRadius, cutout = cfg.cutout, cutoutPath = cutoutPath,
+            cfg, cfg.circle()!!, cfg.dot!!, colour, Offset(0, 0), cornerRadius, cutout = cfg.cutout, cutoutPath = cutoutPath,
         )
         val wantAnim = effectiveAnimation(cfg.style, cfg.animation) != Animation.OFF
         if (wantAnim && !animating) {

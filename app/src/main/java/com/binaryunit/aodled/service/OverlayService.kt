@@ -24,7 +24,8 @@ import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.config.Prefs
 import com.binaryunit.aodled.config.defaultCutout
 import com.binaryunit.aodled.config.defaultDot
-import com.binaryunit.aodled.config.defaultRing
+import com.binaryunit.aodled.config.circle
+import com.binaryunit.aodled.config.defaultCircle
 import com.binaryunit.aodled.config.placementDiffers
 import com.binaryunit.aodled.render.FRAME_MS
 import com.binaryunit.aodled.render.LightState
@@ -230,7 +231,7 @@ class OverlayService : AccessibilityService() {
         val path = cutoutPath()
         return LightState(
             cfg = cfg,
-            ring = cfg.ring ?: defaultRing(cutout, width),
+            ring = cfg.circle() ?: defaultCircle(cfg.style, cutout, path?.box(), width),
             dot = cfg.dot ?: defaultDot(cutout, width),
             colour = colour,
             offset = offset,

@@ -16,6 +16,7 @@ import com.binaryunit.aodled.config.Offset
 import com.binaryunit.aodled.config.Pulse
 import com.binaryunit.aodled.config.RingPlacement
 import com.binaryunit.aodled.config.Style
+import com.binaryunit.aodled.config.circleLineScale
 import com.binaryunit.aodled.config.grownBy
 import com.binaryunit.aodled.config.lineThickness
 import com.binaryunit.aodled.config.ringThickness
@@ -108,6 +109,39 @@ class LightRenderer {
                 if (placement == null || source == null) drawRing(canvas, s, colour, alpha, anim, tMs)
                 else drawCutout(canvas, s, placement, source, colour, alpha, anim, tMs)
             }
+            Style.RIPPLE -> drawRipple(canvas, s, colour, tMs)
+            Style.RADAR -> drawRadar(canvas, s, colour, tMs)
+        }
+    }
+
+    /** Arcs left and right of the ring's centre, growing from its radius out to [RADAR_SPREAD] times it. */
+    private fun drawRadar(canvas: Canvas, s: LightState, colour: Int, tMs: Long) {
+        // Burn-in grows or shrinks the first arc, like the ring
+        val start = s.ring.radius + s.offset.dx
+        val t = ringThickness(s.ring.radius, s.cfg.circleLineScale())
+        for (w in radarWaves(animPhase(tMs, RADAR_PERIOD_MS))) {
+            val radius = radarRadius(start, w.growth)
+            rect.set(s.ring.cx - radius, s.ring.cy - radius, s.ring.cx + radius, s.ring.cy + radius)
+            val c = withAlpha(colour, w.alpha)
+            for (middle in listOf(0f, 180f)) {
+                val from = middle - RADAR_SWEEP / 2
+                canvas.drawArc(rect, from, RADAR_SWEEP, false, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
+                canvas.drawArc(rect, from, RADAR_SWEEP, false, stroke(core, t, c).apply { strokeCap = Paint.Cap.ROUND })
+            }
+        }
+        core.strokeCap = Paint.Cap.BUTT
+    }
+
+    /** Rings growing from the ring's radius out to [RIPPLE_SPREAD] times it, all with the ring's line thickness. */
+    private fun drawRipple(canvas: Canvas, s: LightState, colour: Int, tMs: Long) {
+        // Burn-in grows or shrinks the first ring, like the ring
+        val start = s.ring.radius + s.offset.dx
+        val t = ringThickness(s.ring.radius, s.cfg.circleLineScale())
+        for (w in rippleWaves(animPhase(tMs, RIPPLE_PERIOD_MS))) {
+            val radius = rippleRadius(start, w.growth)
+            val c = withAlpha(colour, w.alpha)
+            canvas.drawCircle(s.ring.cx, s.ring.cy, radius, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
+            canvas.drawCircle(s.ring.cx, s.ring.cy, radius, stroke(core, t, c))
         }
     }
 
@@ -116,10 +150,10 @@ class LightRenderer {
         val cy = s.ring.cy
         // Burn-in grows or shrinks the ring around the camera; the line keeps the saved size's thickness
         val r = s.ring.radius + s.offset.dx
-        val t = ringThickness(s.ring.radius, s.cfg.ringLineScale)
+        val t = ringThickness(s.ring.radius, s.cfg.circleLineScale())
         if (anim == Animation.MOTION) {
             val phase = animPhase(tMs, SWIRL_PERIOD_MS)
-            drawSwirl(canvas, cx, cy, r, swirlStroke(s.ring.radius, phase, s.cfg.ringLineScale), colour, phase)
+            drawSwirl(canvas, cx, cy, r, swirlStroke(s.ring.radius, phase, s.cfg.circleLineScale()), colour, phase)
         } else {
             val c = withAlpha(colour, alpha)
             canvas.drawCircle(cx, cy, r, stroke(glowPaint(t), t, withAlpha(c, glowAlpha(aod))))
