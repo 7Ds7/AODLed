@@ -78,9 +78,8 @@ class OverlayService : AccessibilityService() {
             if (intent.action == Intent.ACTION_USER_PRESENT) {
                 AppState.tracker.markSeen(System.currentTimeMillis())
                 AppState.changed()
-            } else {
-                evaluate()
             }
+            evaluate()
         }
     }
 
@@ -146,9 +145,13 @@ class OverlayService : AccessibilityService() {
             addAction(Intent.ACTION_SCREEN_OFF)
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_USER_PRESENT)
+            // Android Auto keeps its own displays awake, so the device as a whole never sleeps and SCREEN_OFF/ON stop
+            // coming (#9). The AOD's doze dream still starts and stops with the phone's own screen.
+            addAction(Intent.ACTION_DREAMING_STARTED)
+            addAction(Intent.ACTION_DREAMING_STOPPED)
         }
         // Exported: USER_PRESENT comes from SystemUI, an app uid, so a not-exported receiver never gets it.
-        // Safe, all three actions are protected and only the system can send them. Android 12 has no flag.
+        // Safe, all five actions are protected and only the system can send them. Android 12 has no flag.
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenReceiver, filter, RECEIVER_EXPORTED)
         else registerReceiver(screenReceiver, filter)
         registerReceiver(tickReceiver, IntentFilter(Intent.ACTION_TIME_TICK))
