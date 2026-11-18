@@ -11,7 +11,7 @@ Miss the notification LED? AODLed draws a small light on the always-on display i
 <li><b>App filter:</b> an Allow list lights only the apps you pick, an Ignore list keeps the ones you pick dark.</li>
 <li><b>Private Space:</b> notifications from the Private Space light it in the right app colour, and its apps can go on the Allow or Ignore list after their first notification.</li>
 <li><b>Place it yourself:</b> drag and pinch the light in a full-screen editor.</li>
-<li><b>Burn-in care:</b> the light moves by a few pixels each time the screen turns off.</li>
+<li><b>Burn-in care:</b> the light shifts slightly every 3 minutes and each time the screen turns off.</li>
 </ul>
 
 <b>Permissions and why</b>
