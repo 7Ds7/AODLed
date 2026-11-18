@@ -2,8 +2,8 @@ Miss the notification LED? AODLed draws a small light on the always-on display i
 
 <b>Features</b>
 <ul>
-<li><b>Four styles:</b> a ring around the camera hole, a small dot, a glow along the screen edges, or the camera cutout's own outline. Ring and cutout have an adjustable line thickness.</li>
-<li><b>Animations:</b> off (a still light, kindest to the battery), a pulse, or motion: a swirl around the ring, a line tracing the cutout, a comet along the edges.</li>
+<li><b>Six styles:</b> a ring, a small dot, a glow along the screen edges, the camera cutout's own outline, ripples, or radar arcs. Ring, cutout, ripple and radar have an adjustable line thickness.</li>
+<li><b>Animations:</b> off (a still light, kindest to the battery), a pulse, a swirl around the ring, a line tracing the cutout, a comet along the edges.</li>
 <li><b>Pulse settings:</b> blink length, blinks per burst, and a pause between bursts that keeps the light dark in between.</li>
 <li><b>Colours:</b> each app's own colour, taken from its notification or its icon, or one fixed colour, from the palette or your own.</li>
 <li><b>Light off:</b> when you dismiss the notification, or as soon as you unlock the phone. A new message brings it back.</li>

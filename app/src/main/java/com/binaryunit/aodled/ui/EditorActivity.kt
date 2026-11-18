@@ -181,7 +181,7 @@ class EditorActivity : AppCompatActivity() {
 
     private fun withDefaults(c: LightConfig) =
         c.copy(
-            ring = c.ring ?: defaultRing(cutout, width),
+            ring = c.ring ?: defaultRing(cutoutBox, width),
             ripple = c.ripple ?: defaultBurst(cutoutBox, width),
             radar = c.radar ?: defaultBurst(cutoutBox, width),
             dot = c.dot ?: defaultDot(cutout, width),

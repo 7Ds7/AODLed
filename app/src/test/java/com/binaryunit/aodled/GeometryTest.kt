@@ -49,18 +49,19 @@ class GeometryTest {
         assertEquals(40f, b.radius - ringThickness(b.radius) / 2, 0.001f)
     }
 
-    @Test fun `ripple and radar start from the burst around the real hole, ring from the ring`() {
+    @Test fun `every circle style starts around the real hole, never Android's cutout rectangle`() {
         // Android's cutout rectangle runs up to the screen's top edge; the hole's outline is the real circle
         val hole = Box(506f, 35f, 574f, 103f)
-        assertEquals(defaultRing(cutout, 1080), defaultCircle(Style.RING, cutout, hole, 1080))
-        assertEquals(defaultBurst(hole, 1080), defaultCircle(Style.RIPPLE, cutout, hole, 1080))
-        assertEquals(defaultBurst(hole, 1080), defaultCircle(Style.RADAR, cutout, hole, 1080))
+        assertEquals(defaultRing(hole, 1080), defaultCircle(Style.RING, hole, 1080))
+        assertEquals(defaultRing(null, 1080), defaultCircle(Style.RING, null, 1080))
+        assertEquals(defaultBurst(hole, 1080), defaultCircle(Style.RIPPLE, hole, 1080))
+        assertEquals(defaultBurst(hole, 1080), defaultCircle(Style.RADAR, hole, 1080))
         // Never the rectangle: without an outline they start top centre
-        assertEquals(defaultBurst(null, 1080), defaultCircle(Style.RADAR, cutout, null, 1080))
+        assertEquals(defaultBurst(null, 1080), defaultCircle(Style.RADAR, null, 1080))
     }
 
-    @Test fun `default dot sits below cutout at 4px`() =
-        assertEquals(DotPlacement(540f, 124f, 4f), defaultDot(cutout, 1080))
+    @Test fun `default dot sits below cutout at 10px`() =
+        assertEquals(DotPlacement(540f, 124f, 10f), defaultDot(cutout, 1080))
 
     @Test fun `default edges are thin`() = assertEquals(2f, com.binaryunit.aodled.config.LightConfig().edgeThickness)
 

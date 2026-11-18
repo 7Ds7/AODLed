@@ -44,6 +44,10 @@ class AnimationTest {
         for (a in Animation.entries) assertEquals(Animation.MOTION, effectiveAnimation(Style.RIPPLE, a))
     }
 
+    @Test fun `ripple keeps the owner's timing`() {
+        assertEquals(2840L, RIPPLE_PERIOD_MS)
+    }
+
     @Test fun `ripple rings are born small at full brightness, then grow and fade`() {
         val first = rippleWaves(0).single()
         assertEquals(0f, first.growth, 0.001f)

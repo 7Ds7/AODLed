@@ -27,8 +27,10 @@
 
 ## Features
 
-- **Four styles:** a ring around the camera, a dot, an edge glow, or the cutout's own outline, with adjustable line thickness.
-- **Still or animated:** a pulse, a swirl, a line tracing the cutout, a comet along the edges, or a still light to save battery.
+- **Six styles:** a ring, a small dot, a glow along the screen edges, the camera cutout's own outline, ripples, or
+  radar arcs. Ring, cutout, ripple and radar have an adjustable line thickness.
+- **Still or animated:** off (a still light, kindest to the battery), a pulse, a swirl around the ring, a line tracing
+  the cutout, a comet along the edges.
 - **Pulse your way:** blink length, blinks per burst, and a pause between bursts.
 - **App colours:** taken from each notification or app icon, or one colour of your choice.
 - **Only what matters:** silent and ongoing notifications stay dark. Allow or Ignore lists pick which apps light it,

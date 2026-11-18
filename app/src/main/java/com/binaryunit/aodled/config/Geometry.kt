@@ -7,7 +7,7 @@ const val RING_MAX_RADIUS = 300f
 const val RING_THICKNESS_RATIO = 0.08f
 const val DOT_MIN = 1f
 const val DOT_MAX = 2 * RING_MAX_RADIUS
-const val DOT_DEFAULT = 4f
+const val DOT_DEFAULT = 10f
 const val DOT_GAP = 24f
 const val EDGE_MIN = 1f
 const val EDGE_MAX = 24f
@@ -39,9 +39,10 @@ fun defaultBurst(hole: Box?, screenWidth: Int): RingPlacement {
     return RingPlacement(hole.centreX, hole.centreY, size / 2 / (1 - RING_THICKNESS_RATIO / 2))
 }
 
-fun defaultCircle(style: Style, cutout: Box?, hole: Box?, screenWidth: Int): RingPlacement = when (style) {
+/** Every circle style starts around the hole's real outline ([hole]), never Android's cutout rectangle. */
+fun defaultCircle(style: Style, hole: Box?, screenWidth: Int): RingPlacement = when (style) {
     Style.RIPPLE, Style.RADAR -> defaultBurst(hole, screenWidth)
-    else -> defaultRing(cutout, screenWidth)
+    else -> defaultRing(hole, screenWidth)
 }
 
 /** The circle the current style draws: Ripple and Radar keep their own, everything else uses the ring. */

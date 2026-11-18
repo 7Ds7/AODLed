@@ -234,7 +234,7 @@ class OverlayService : AccessibilityService() {
         val path = cutoutPath()
         return LightState(
             cfg = cfg,
-            ring = cfg.circle() ?: defaultCircle(cfg.style, cutout, path?.box(), width),
+            ring = cfg.circle() ?: defaultCircle(cfg.style, path?.box(), width),
             dot = cfg.dot ?: defaultDot(cutout, width),
             colour = colour,
             offset = offset,
