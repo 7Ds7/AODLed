@@ -40,5 +40,10 @@ jobs:
         with:
           persist-credentials: false
 
+      # gradle-wrapper.jar runs first on every ./gradlew: check it against Gradle's published checksums.
+      # Full URL, so it doesn't depend on which mirror the instance uses for short action names.
+      - name: Validate Gradle wrapper
+        uses: https://github.com/gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
       - name: Tests
         run: ./gradlew --no-daemon testDebugUnitTest
