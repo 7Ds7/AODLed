@@ -4,7 +4,7 @@ plugins {
     id("com.android.application")
 }
 
-val appVersion = "0.2"
+val appVersion = "0.3"
 
 // Release signing details live outside git: storeFile, storePassword, keyAlias, keyPassword
 val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }
@@ -29,7 +29,7 @@ android {
         applicationId = "com.binaryunit.aodled"
         minSdk = 31
         targetSdk = 35
-        versionCode = 2
+        versionCode = 3
         versionName = appVersion
     }
 

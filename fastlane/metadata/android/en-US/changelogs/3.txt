@@ -1,0 +1,9 @@
+- Two new styles: Ripple and Radar
+- Editor: 1 px move and resize buttons, panel at the top or bottom, Cancel
+- Editor style picker is a dropdown
+- Dot grows up to 600 px and only pulses (no Motion)
+- Ring's default size and place fit the camera hole
+
+- still lights shift for burn-in every 3 minutes, not only at screen off
+- black screen could stay up after unlocking with Android Auto connected
+- accessibility service no longer receives other apps' announcements
