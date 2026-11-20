@@ -27,8 +27,8 @@
 
 ## Features
 
-- **Six styles:** a ring, a small dot, a glow along the screen edges, the camera cutout's own outline, ripples, or
-  radar arcs. Ring, cutout, ripple and radar have an adjustable line thickness.
+- **Six styles:** ring, dot, ripples, radar, a glow along the screen edges, the camera cutout's own outline.
+  Adjustable size, position and thickness.
 - **Still or animated:** off (a still light, kindest to the battery), a pulse, a swirl around the ring, a line tracing
   the cutout, a comet along the edges.
 - **Pulse your way:** blink length, blinks per burst, and a pause between bursts.
