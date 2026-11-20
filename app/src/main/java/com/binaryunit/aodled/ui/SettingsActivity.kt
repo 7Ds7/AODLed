@@ -44,6 +44,7 @@ import com.binaryunit.aodled.config.Style
 import com.binaryunit.aodled.config.withFilterList
 import com.binaryunit.aodled.config.withoutPackages
 import com.binaryunit.aodled.render.cutoutPath
+import com.binaryunit.aodled.render.effectiveAnimation
 import com.binaryunit.aodled.service.LightListenerService
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
@@ -333,11 +334,15 @@ class SettingsActivity : AppCompatActivity() {
         enabledSwitch.isChecked = cfg.enabled
         setTreeEnabled(lightSettings, cfg.enabled)
         styleMenu.show(cfg.style)
-        // Ripple and Radar only exist in motion: Motion shows as chosen and Off and Pulse can't be picked
-        val motionOnly = cfg.style == Style.RIPPLE || cfg.style == Style.RADAR
+        // Ripple and Radar only exist in motion: Motion shows as chosen and Off and Pulse can't be picked.
+        // A dot on Motion pulses (effectiveAnimation): Motion can't be picked and shows as Pulse.
         findViewById<MaterialButtonToggleGroup>(R.id.animation_group)
-            .check(animations.getValue(if (motionOnly) Animation.MOTION else cfg.animation))
-        if (motionOnly) listOf(R.id.anim_off, R.id.anim_pulse).forEach { findViewById<View>(it).isEnabled = false }
+            .check(animations.getValue(effectiveAnimation(cfg.style, cfg.animation)))
+        when (cfg.style) {
+            Style.RIPPLE, Style.RADAR -> listOf(R.id.anim_off, R.id.anim_pulse)
+            Style.DOT -> listOf(R.id.anim_motion)
+            else -> emptyList()
+        }.forEach { findViewById<View>(it).isEnabled = false }
         findViewById<MaterialButtonToggleGroup>(R.id.colour_group).check(colourModes.getValue(cfg.colourMode))
         findViewById<MaterialButtonToggleGroup>(R.id.light_off_group).check(lightOffs.getValue(cfg.lightOff))
         findViewById<MaterialButtonToggleGroup>(R.id.dnd_group).check(dndModes.getValue(cfg.respectDnd))
